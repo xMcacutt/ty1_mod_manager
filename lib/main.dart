@@ -15,7 +15,7 @@ void main() {
 
 /// URL where the latest version info is stored
 const String latestVersionUrl =
-    "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/main/latest.json";
+    "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/master/latest.json";
 
 /// Check for updates and trigger download if needed
 Future<void> checkForUpdate() async {
