@@ -1,0 +1,13 @@
+[
+    {
+      "name": "Ty1 AP Client",
+      "version": "1.1.6",
+      "description": "Client mod for Archipelago.gg implementation.",
+      "dependencies": ["TygerMemory 1.0.3"],
+      "conflicts": ["MTP Console Mod", "Ty1 Collectible Tracker", "Ty1 MLM", "Tyger Utility"],
+      "author": "xMcacutt",
+      "dll_name": "Ty1AP-Client.dll",
+      "icon_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/refs/heads/master/favico.ico",
+      "download_url": "https://github.com/xMcacutt/Ty1AP-Client/releases/latest/download/Ty1APClient.zip"
+    }
+]

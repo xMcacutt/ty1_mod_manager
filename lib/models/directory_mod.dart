@@ -1,31 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ty1_mod_manager/models/directory_mod.dart';
+import 'package:ty1_mod_manager/models/mod.dart';
 
-class Mod {
+class DirectoryMod {
   final String name;
   final String version;
   final String description;
   final List<String> dependencies;
   final List<String> conflicts;
   final File icon;
-  final File patchFile;
-  final File dllFile;
-  final String author;
+  final bool containsPatch;
   final String lastUpdated;
+  final String dllName;
+  final String author;
 
-  Mod({
+  DirectoryMod({
     required this.name,
     required this.version,
     required this.description,
     required this.dependencies,
     required this.conflicts,
     required this.icon,
-    required this.patchFile,
-    required this.dllFile,
+    required this.dllName,
     required this.lastUpdated,
     required this.author,
+    required this.containsPatch,
   });
 
   @override
@@ -43,34 +43,28 @@ class Mod {
   @override
   int get hashCode => name.hashCode;
 
-  // Factory method to create a Mod instance from mod_info.json and other files
-  static Future<Mod> fromDirectory(Directory modDir) async {
-    final modInfoFile = File('${modDir.path}/mod_info.json');
-    final modInfoJson = await modInfoFile.readAsString();
-    final modInfo = jsonDecode(modInfoJson);
-
+  static DirectoryMod fromJson(modInfo) {
     final version = modInfo['version'] ?? '';
     final name = modInfo['name'] ?? '';
     final author = modInfo['author'] ?? '';
     final lastUpdated = modInfo['last_updated'] ?? '';
     final description = modInfo['description'] ?? '';
+    final containsPatch = modInfo['contains_patch'] ?? false;
+    final dllName = modInfo['dll_name'] ?? '';
     final dependencies = List<String>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final iconFile = File('${modDir.path}/favico.ico');
-    final patchFile = File('${modDir.path}/Patch_PC.rkv');
-    final dllFile = File('${modDir.path}/${modInfo['dll_name'] ?? ''}');
-
-    return Mod(
+    final iconFile = File(modInfo['icon_url']);
+    return DirectoryMod(
       name: name,
       version: version,
       description: description,
       dependencies: dependencies,
       conflicts: conflicts,
       icon: iconFile,
-      dllFile: dllFile,
-      patchFile: patchFile,
       author: author,
+      containsPatch: containsPatch,
       lastUpdated: lastUpdated,
+      dllName: dllName,
     );
   }
 }

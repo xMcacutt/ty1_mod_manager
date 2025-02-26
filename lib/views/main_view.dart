@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart'
     show getApplicationSupportDirectory;
+import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/theme.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart';
@@ -18,6 +19,51 @@ class MainView extends StatefulWidget {
 
 class _MainViewState extends State<MainView> {
   List<Mod> selectedMods = [];
+
+  Future<void> _checkForUpdate() async {
+    Settings? settings = await Settings.loadSettings();
+    if (settings == null) {
+      return;
+    }
+    String? batPath = await checkForUpdate();
+    if (batPath == null) {
+      return;
+    }
+    if (settings.autoUpdateManager) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Update Available"),
+            content: Text(
+              "A new update is available. Would you like to update now?",
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Later"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  updateApp(batPath);
+                },
+                child: Text("Update Now"),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdate();
+  }
 
   @override
   Widget build(BuildContext context) {
