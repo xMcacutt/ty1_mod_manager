@@ -21,7 +21,10 @@ const String latestVersionUrl =
 Future<void> checkForUpdate() async {
   try {
     final response = await http.get(Uri.parse(latestVersionUrl));
-    if (response.statusCode != 200) return;
+    if (response.statusCode != 200) {
+      print("Could not access file at url");
+      return;
+    }
 
     final latestData = json.decode(response.body);
     final latestVersion = latestData["version"];
