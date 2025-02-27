@@ -249,8 +249,11 @@ void onLaunchButtonPressed(List<Mod> selectedMods) async {
         }
       }
     }
-    await mod.dllFile.copy(
-      '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile.path)}',
+    if (mod.dllFile == null) {
+      return;
+    }
+    await mod.dllFile!.copy(
+      '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}',
     );
   }
 
@@ -277,7 +280,7 @@ class ModListing extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: FutureBuilder<bool>(
-        future: mod.icon.exists(),
+        future: mod.iconFile?.exists(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
@@ -286,7 +289,7 @@ class ModListing extends StatelessWidget {
               !snapshot.data!) {
             return Image.asset('resource/unknown.ico');
           } else {
-            return Image.file(mod.icon);
+            return Image.file(mod.iconFile!);
           }
         },
       ), // Display mod icon

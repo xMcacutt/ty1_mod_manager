@@ -1,19 +1,25 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ty1_mod_manager/models/directory_mod.dart';
+import 'package:archive/archive.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:ty1_mod_manager/services/mod_service.dart';
 
 class Mod {
   final String name;
   final String version;
   final String description;
-  final List<String> dependencies;
+  final List<dynamic> dependencies;
   final List<String> conflicts;
-  final File icon;
-  final File patchFile;
-  final File dllFile;
+  final String? directoryIconPath;
+  final File? iconFile;
+  final File? patchFile;
+  final File? dllFile;
   final String author;
   final String lastUpdated;
+  final String dllName;
+  final String downloadUrl;
 
   Mod({
     required this.name,
@@ -21,19 +27,19 @@ class Mod {
     required this.description,
     required this.dependencies,
     required this.conflicts,
-    required this.icon,
-    required this.patchFile,
-    required this.dllFile,
+    this.iconFile,
+    this.patchFile,
+    this.dllFile,
     required this.lastUpdated,
     required this.author,
+    required this.directoryIconPath,
+    required this.dllName,
+    required this.downloadUrl,
   });
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is DirectoryMod) {
-      return other.name == name;
-    }
     if (other is Mod) {
       return other.name == name;
     }
@@ -42,6 +48,60 @@ class Mod {
 
   @override
   int get hashCode => name.hashCode;
+
+  Future<bool> install() async {
+    // Replace button with load wheel
+    var modsDir = await getModsDirectory();
+    var modDir = Directory('${modsDir.path}/$name');
+    if (await modDir.exists()) {
+      var modInfoFile = File('${modDir.path}/mod_info.json');
+      final modInfoJson = await modInfoFile.readAsString();
+      final modInfo = jsonDecode(modInfoJson);
+      var myVersion = modInfo['version'];
+      if (myVersion == null || myVersion == version) {
+        return false;
+      }
+    } else {
+      modDir.create();
+    }
+    final response = await http.get(Uri.parse(downloadUrl));
+    if (response.statusCode != 200) {
+      print("Could not access file at url");
+      return false;
+    }
+    final tempDir = await getTemporaryDirectory();
+    final zipFilePath = "${tempDir.path}/$name.zip";
+    await File(zipFilePath).writeAsBytes(response.bodyBytes);
+    final bytes = await File(zipFilePath).readAsBytes();
+    final archive = ZipDecoder().decodeBytes(bytes);
+    for (final file in archive) {
+      final filePath = "$modDir/${file.name}";
+      if (file.isFile) {
+        await File(filePath).create(recursive: true);
+        await File(filePath).writeAsBytes(file.content as List<int>);
+      } else {
+        await Directory(filePath).create(recursive: true);
+      }
+    }
+    for (final dep in dependencies) {
+      final depName = dep['dep_name'];
+      final depUrl = dep['dep_url'];
+      final depVersion = dep['dep_version'];
+      if (depName == null || depUrl == null || depVersion == null) return false;
+      var depsDir = await getDepsDirectory();
+      var depDir = Directory('${depsDir.path}/$depName/$depVersion');
+      if (await depDir.exists()) continue;
+      await depDir.create();
+      final response = await http.get(Uri.parse(depUrl));
+      if (response.statusCode != 200) {
+        print("Could not access file at url");
+        return false;
+      }
+      final depFilePath = "${depDir.path}/$depName.dll";
+      await File(depFilePath).writeAsBytes(response.bodyBytes);
+    }
+    return true;
+  }
 
   // Factory method to create a Mod instance from mod_info.json and other files
   static Future<Mod> fromDirectory(Directory modDir) async {
@@ -56,9 +116,12 @@ class Mod {
     final description = modInfo['description'] ?? '';
     final dependencies = List<String>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
+    final directoryIconPath = modInfo['icon_url'] ?? '';
     final iconFile = File('${modDir.path}/favico.ico');
     final patchFile = File('${modDir.path}/Patch_PC.rkv');
-    final dllFile = File('${modDir.path}/${modInfo['dll_name'] ?? ''}');
+    final dllName = modInfo['dll_name'] ?? '';
+    final dllFile = File('${modDir.path}/$dllName.dll');
+    final downloadUrl = modInfo['download_url'] ?? '';
 
     return Mod(
       name: name,
@@ -66,11 +129,40 @@ class Mod {
       description: description,
       dependencies: dependencies,
       conflicts: conflicts,
-      icon: iconFile,
+      iconFile: iconFile,
       dllFile: dllFile,
       patchFile: patchFile,
       author: author,
       lastUpdated: lastUpdated,
+      directoryIconPath: directoryIconPath,
+      dllName: dllName,
+      downloadUrl: downloadUrl,
+    );
+  }
+
+  static Mod fromJson(dynamic modInfo) {
+    final version = modInfo['version'] ?? '';
+    final name = modInfo['name'] ?? '';
+    final author = modInfo['author'] ?? '';
+    final lastUpdated = modInfo['last_updated'] ?? '';
+    final description = modInfo['description'] ?? '';
+    final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
+    final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
+    final directoryIconPath = modInfo['icon_url'] ?? '';
+    final dllName = modInfo['dll_name'] ?? '';
+    final downloadUrl = modInfo['download_url'] ?? '';
+
+    return Mod(
+      version: version,
+      name: name,
+      author: author,
+      lastUpdated: lastUpdated,
+      description: description,
+      dependencies: dependencies,
+      conflicts: conflicts,
+      directoryIconPath: directoryIconPath,
+      dllName: dllName,
+      downloadUrl: downloadUrl,
     );
   }
 }

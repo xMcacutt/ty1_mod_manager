@@ -1,9 +1,46 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:ty1_mod_manager/models/directory_mod.dart';
 import 'dart:convert'; // For JSON parsing
 import '../services/mod_service.dart'; // For loading local mods
 import '../models/mod.dart'; // For the Mod model
+
+class ModDirectoryListing extends StatelessWidget {
+  final Mod mod;
+  final VoidCallback onDownload;
+
+  ModDirectoryListing({required this.mod, required this.onDownload});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Image.network(
+        mod.directoryIconPath as String,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset('resource/unknown.ico');
+        },
+      ),
+      title: Text(mod.name),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(mod.description),
+          Row(
+            children: [
+              Text('Author: ${mod.author}'),
+              SizedBox(width: 10),
+              Text('Version: ${mod.version}'),
+              SizedBox(width: 10),
+              Text('Date: ${mod.lastUpdated}'),
+            ],
+          ),
+        ],
+      ),
+      trailing: IconButton(icon: Icon(Icons.download), onPressed: onDownload),
+    );
+  }
+}
 
 class ModDirectoryView extends StatefulWidget {
   @override
@@ -11,11 +48,10 @@ class ModDirectoryView extends StatefulWidget {
 }
 
 class _ModDirectoryViewState extends State<ModDirectoryView> {
-  List<DirectoryMod> allMods = []; // List of all mods (from GitHub and local)
-  List<DirectoryMod> displayedMods =
-      []; // List of mods to display (filtered with search)
-  List<DirectoryMod> installedMods = []; // List of mods already installed
-  List<DirectoryMod> availableMods = []; // List of mods available to install
+  List<Mod> allMods = []; // List of all mods (from GitHub and local)
+  List<Mod> displayedMods = []; // List of mods to display
+  List<Mod> installedMods = []; // List of mods already installed
+  List<Mod> availableMods = []; // List of mods available to install
   bool isLoading = false;
   TextEditingController searchController = TextEditingController();
 
@@ -40,8 +76,8 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
       List<dynamic> modData = jsonDecode(response.body);
 
       // Convert mod data into Mod objects
-      List<DirectoryMod> remoteMods =
-          modData.map((modJson) => DirectoryMod.fromJson(modJson)).toList();
+      List<Mod> remoteMods =
+          modData.map((modJson) => Mod.fromJson(modJson)).toList();
 
       // Load local mods
       List<Mod> localMods = await loadMods(); // Load mods already installed
@@ -77,18 +113,6 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
     });
   }
 
-  // Action to install or update a mod
-  void installOrUpdateMod(DirectoryMod mod) {
-    // Call the appropriate function to install or update mod
-    if (installedMods.contains(mod)) {
-      // Update mod if already installed
-      // Logic for updating mod goes here
-    } else {
-      // Install mod if not already installed
-      // Logic for installing mod goes here
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +124,7 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: ModSearchDelegate(allMods),
+                delegate: ModSearchDelegate(allMods, installedMods),
               );
             },
           ),
@@ -127,14 +151,11 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
                       itemCount: displayedMods.length,
                       itemBuilder: (context, index) {
                         final mod = displayedMods[index];
-                        return ListTile(
-                          leading: Image.file(mod.icon), // Display mod icon
-                          title: Text(mod.name),
-                          subtitle: Text(mod.version),
-                          trailing: IconButton(
-                            icon: Icon(Icons.download),
-                            onPressed: () => installOrUpdateMod(mod),
-                          ),
+                        return ModDirectoryListing(
+                          mod: mod,
+                          onDownload: () {
+                            mod.install();
+                          },
                         );
                       },
                     ),
@@ -146,9 +167,10 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
 }
 
 class ModSearchDelegate extends SearchDelegate {
-  final List<DirectoryMod> mods;
+  final List<Mod> mods;
+  final List<Mod> installedMods;
 
-  ModSearchDelegate(this.mods);
+  ModSearchDelegate(this.mods, this.installedMods);
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -183,16 +205,11 @@ class ModSearchDelegate extends SearchDelegate {
       itemCount: filteredMods.length,
       itemBuilder: (context, index) {
         final mod = filteredMods[index];
-        return ListTile(
-          leading: Image.file(mod.icon), // Display mod icon
-          title: Text(mod.name),
-          subtitle: Text(mod.version),
-          trailing: IconButton(
-            icon: Icon(Icons.download),
-            onPressed: () {
-              // Logic to install or update mod goes here
-            },
-          ),
+        return ModDirectoryListing(
+          mod: mod,
+          onDownload: () {
+            mod.install();
+          },
         );
       },
     );

@@ -19,6 +19,22 @@ Future<Directory> getModsDirectory() async {
   return modsDirectory;
 }
 
+Future<Directory> getDepsDirectory() async {
+  // Get the appropriate directory for persistent storage (based on platform)
+  final directory =
+      await getApplicationSupportDirectory(); // Cross-platform solution
+
+  final depsDirectory = Directory(
+    '${directory.path}/deps',
+  ); // Subdirectory for mods
+  if (!depsDirectory.existsSync()) {
+    await depsDirectory.create(
+      recursive: true,
+    ); // Create the directory if it doesn't exist
+  }
+  return depsDirectory;
+}
+
 Future<List<Mod>> loadMods() async {
   final modsDir = await getModsDirectory();
   if (!modsDir.existsSync()) {
