@@ -2,18 +2,29 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'dart:convert'; // For JSON parsing
 import '../services/mod_service.dart'; // For loading local mods
 import '../models/mod.dart'; // For the Mod model
 
 class ModDirectoryListing extends StatelessWidget {
   final Mod mod;
+  final Mod? installedMod;
+  final bool isInstalling;
   final VoidCallback onDownload;
 
-  ModDirectoryListing({required this.mod, required this.onDownload});
+  ModDirectoryListing({
+    required this.mod,
+    this.installedMod,
+    required this.isInstalling,
+    required this.onDownload,
+  });
 
   @override
   Widget build(BuildContext context) {
+    bool isUpToDate =
+        installedMod != null && installedMod!.version == mod.version;
+
     return ListTile(
       leading: Image.network(
         mod.directoryIconPath as String,
@@ -37,7 +48,16 @@ class ModDirectoryListing extends StatelessWidget {
           ),
         ],
       ),
-      trailing: IconButton(icon: Icon(Icons.download), onPressed: onDownload),
+      trailing:
+          isUpToDate
+              ? null // Hide button if mod is up to date
+              : isInstalling
+              ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ) // Show loading wheel if installing
+              : IconButton(icon: Icon(Icons.download), onPressed: onDownload),
     );
   }
 }
@@ -54,12 +74,26 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
   List<Mod> availableMods = []; // List of mods available to install
   bool isLoading = false;
   TextEditingController searchController = TextEditingController();
+  Set<String> modsInstalling = {};
 
   @override
   void initState() {
     super.initState();
     loadModData();
     searchController.addListener(onSearchChanged);
+  }
+
+  Future<void> installMod(Mod mod) async {
+    setState(() {
+      modsInstalling.add(mod.name); // Show loading indicator
+    });
+
+    await mod.install(); // Perform async installation
+
+    setState(() {
+      modsInstalling.remove(mod.name); // Remove loading indicator
+      installedMods.add(mod); // Add mod to installed list
+    });
   }
 
   Future<void> loadModData() async {
@@ -116,20 +150,7 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Mod Directory"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: ModSearchDelegate(allMods, installedMods),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: MMAppBar(title: "Mod Directory"),
       body:
           isLoading
               ? Center(child: CircularProgressIndicator())
@@ -151,11 +172,19 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
                       itemCount: displayedMods.length,
                       itemBuilder: (context, index) {
                         final mod = displayedMods[index];
+                        bool modInstalled = installedMods.any(
+                          (x) => x.name == mod.name,
+                        );
                         return ModDirectoryListing(
                           mod: mod,
-                          onDownload: () {
-                            mod.install();
-                          },
+                          installedMod:
+                              modInstalled
+                                  ? installedMods.firstWhere(
+                                    (x) => x.name == mod.name,
+                                  )
+                                  : null,
+                          isInstalling: modsInstalling.contains(mod.name),
+                          onDownload: () => installMod(mod),
                         );
                       },
                     ),
@@ -169,8 +198,15 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
 class ModSearchDelegate extends SearchDelegate {
   final List<Mod> mods;
   final List<Mod> installedMods;
+  final Set<String> installingMods; // Track installing mods
+  final Future<void> Function(Mod mod) installMod; // Async install function
 
-  ModSearchDelegate(this.mods, this.installedMods);
+  ModSearchDelegate(
+    this.mods,
+    this.installedMods,
+    this.installingMods,
+    this.installMod,
+  );
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -179,6 +215,7 @@ class ModSearchDelegate extends SearchDelegate {
         icon: Icon(Icons.clear),
         onPressed: () {
           query = '';
+          showSuggestions(context); // Refresh suggestions
         },
       ),
     ];
@@ -196,27 +233,42 @@ class ModSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
+    return _buildModList(context, query);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return _buildModList(context, query);
+  }
+
+  /// **Helper method to filter and display mods**
+  Widget _buildModList(BuildContext context, String query) {
     final filteredMods =
-        mods.where((mod) {
-          return mod.name.toLowerCase().contains(query.toLowerCase());
-        }).toList();
+        mods
+            .where(
+              (mod) => mod.name.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
 
     return ListView.builder(
       itemCount: filteredMods.length,
       itemBuilder: (context, index) {
         final mod = filteredMods[index];
+        bool modInstalled = installedMods.any((x) => x.name == mod.name);
+        final installedMod =
+            modInstalled
+                ? installedMods.firstWhere((x) => x.name == mod.name)
+                : null;
+
         return ModDirectoryListing(
           mod: mod,
-          onDownload: () {
-            mod.install();
-          },
+          installedMod: installedMod,
+          isInstalling: installingMods.contains(
+            mod.name,
+          ), // Track install state
+          onDownload: () => installMod(mod),
         );
       },
     );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return Container(); // Optional: Show suggestions based on the query
   }
 }

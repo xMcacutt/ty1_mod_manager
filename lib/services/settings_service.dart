@@ -3,30 +3,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings {
   String tyDirectoryPath;
-  bool autoUpdateMods;
-  bool autoUpdateManager;
+  bool updateManager;
 
-  Settings({
-    required this.tyDirectoryPath,
-    required this.autoUpdateMods,
-    required this.autoUpdateManager,
-  });
+  Settings({required this.tyDirectoryPath, required this.updateManager});
 
   // Convert Settings object to a Map (for JSON encoding)
   Map<String, dynamic> toMap() {
-    return {
-      'tyDirectoryPath': tyDirectoryPath,
-      'autoUpdateMods': autoUpdateMods,
-      'autoUpdateManager': autoUpdateManager,
-    };
+    return {'tyDirectoryPath': tyDirectoryPath, 'updateManager': updateManager};
   }
 
   // Convert Map to Settings object (for decoding)
   factory Settings.fromMap(Map<String, dynamic> map) {
     return Settings(
       tyDirectoryPath: map['tyDirectoryPath'] ?? '',
-      autoUpdateMods: map['autoUpdateMods'] ?? false,
-      autoUpdateManager: map['autoUpdateManager'] ?? false,
+      updateManager: map['updateManager'] ?? true,
     );
   }
 

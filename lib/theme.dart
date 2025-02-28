@@ -19,7 +19,8 @@ ThemeData appTheme = ThemeData(
   primaryColor: AppColors.mainAccent,
   scaffoldBackgroundColor: AppColors.mainBack,
   appBarTheme: AppBarTheme(
-    backgroundColor: AppColors.altBack,
+    toolbarHeight: 150,
+    backgroundColor: const Color.fromARGB(255, 25, 27, 28),
     titleTextStyle: TextStyle(color: AppColors.mainText, fontSize: 20),
     iconTheme: IconThemeData(color: AppColors.mainAccent),
   ),
@@ -27,7 +28,7 @@ ThemeData appTheme = ThemeData(
   colorScheme: ColorScheme.dark(
     primary: AppColors.mainAccent,
     onPrimary: AppColors.mainAccentOn,
-    secondary: AppColors.altAccent,
+    secondary: const Color.fromARGB(255, 41, 41, 159),
     surface: AppColors.altAccentOn,
     onSurface: AppColors.mainText,
   ),

@@ -3,8 +3,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart'
     show getApplicationSupportDirectory;
+import 'package:ty1_mod_manager/models/mm_app_bar.dart';
+import 'package:ty1_mod_manager/services/ffi_win32.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/theme.dart';
+import 'package:ty1_mod_manager/views/codes_view.dart';
+import 'package:win32/win32.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart';
 import 'dart:io';
@@ -25,38 +29,37 @@ class _MainViewState extends State<MainView> {
     if (settings == null) {
       return;
     }
+    if (!settings.updateManager) return;
     String? batPath = await checkForUpdate();
     if (batPath == null) {
       return;
     }
-    if (settings.autoUpdateManager) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Update Available"),
-            content: Text(
-              "A new update is available. Would you like to update now?",
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Update Available"),
+          content: Text(
+            "A new update is available. Would you like to update now?",
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Later"),
             ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text("Later"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  updateApp(batPath);
-                },
-                child: Text("Update Now"),
-              ),
-            ],
-          );
-        },
-      );
-    }
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                updateApp(batPath);
+              },
+              child: Text("Update Now"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -69,15 +72,7 @@ class _MainViewState extends State<MainView> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Add Scaffold here
-      appBar: AppBar(
-        title: Text(
-          'Ty the Tasmanian Tiger - Mod Manager',
-          style: TextStyle(
-            fontFamily: 'SF Slapstick Comic', // Custom font name
-            fontSize: 27, // Optional: Adjust the font size
-          ),
-        ),
-      ),
+      appBar: MMAppBar(title: "My Mods"),
       body: Stack(
         children: [
           FutureBuilder<List<Mod>>(
@@ -143,27 +138,29 @@ class _MainViewState extends State<MainView> {
             DrawerHeader(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('resource/a4_env.png'),
+                  image: AssetImage('resource/fe_041.png'),
                   fit: BoxFit.cover,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  Text(
-                    'Mod Manager',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              child: Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10),
+                    Text(
+                      'Mod Manager',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Version 1.0.0',
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
-                ],
+                    Text(
+                      'Version 1.0.0',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                  ],
+                ),
               ),
             ),
             ListTile(
@@ -257,11 +254,20 @@ void onLaunchButtonPressed(List<Mod> selectedMods) async {
     );
   }
 
-  ProcessResult result = await Process.run(
+  Process result = await Process.start(
     '${settings.tyDirectoryPath}/Ty.exe',
     [], // Command and arguments
     workingDirectory: settings.tyDirectoryPath,
   );
+
+  MemoryEditor.init(result.pid);
+  await MemoryEditor.waitForProcessToStart(result.pid);
+  CodesView.applyActiveCodes();
+  result.exitCode.then((exitCode) {
+    // Clean up after the process has exited
+    MemoryEditor.deinit();
+    print('Process exited with code: $exitCode');
+  });
 }
 
 class ModListing extends StatelessWidget {

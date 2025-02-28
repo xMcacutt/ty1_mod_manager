@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'dart:io';
 import 'package:ty1_mod_manager/services/github_service.dart';
-import 'package:archive/archive.dart';
 
 class SettingsView extends StatefulWidget {
   @override
@@ -69,8 +69,7 @@ class _SettingsViewState extends State<SettingsView> {
     if (settings != null) {
       setState(() {
         _tyDirectoryController.text = settings.tyDirectoryPath;
-        _autoUpdateMods = settings.autoUpdateMods;
-        _autoUpdateModManager = settings.autoUpdateManager;
+        _autoUpdateModManager = settings.updateManager;
       });
     }
   }
@@ -104,8 +103,7 @@ class _SettingsViewState extends State<SettingsView> {
 
     Settings settings = Settings(
       tyDirectoryPath: _tyDirectoryController.text,
-      autoUpdateMods: _autoUpdateMods,
-      autoUpdateManager: _autoUpdateModManager,
+      updateManager: _autoUpdateModManager,
     );
 
     await settings.saveSettings(); // Save the settings
@@ -136,7 +134,7 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Settings")),
+      appBar: MMAppBar(title: "Settings"),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -178,7 +176,7 @@ class _SettingsViewState extends State<SettingsView> {
             SizedBox(height: 20),
             // Auto Update Mod Manager Switch
             SwitchListTile(
-              title: Text("Auto Update Mod Manager"),
+              title: Text("Check for Updates"),
               value: _autoUpdateModManager,
               onChanged: (bool value) {
                 setState(() {
@@ -188,19 +186,6 @@ class _SettingsViewState extends State<SettingsView> {
               secondary: Icon(Icons.update),
             ),
             SizedBox(height: 10),
-
-            // Auto Update Mods Switch
-            SwitchListTile(
-              title: Text("Auto Update Mods"),
-              value: _autoUpdateMods,
-              onChanged: (bool value) {
-                setState(() {
-                  _autoUpdateMods = value;
-                });
-              },
-              secondary: Icon(Icons.update),
-            ),
-            SizedBox(height: 20),
 
             // Save Settings Button
             ElevatedButton(

@@ -46,6 +46,7 @@ dependencies:
   file_picker: ^9.0.1
   shared_preferences: ^2.5.2
   archive: ^4.0.3
+  ffi: ^2.1.4
 
 dev_dependencies:
   flutter_test:
@@ -93,6 +94,9 @@ flutter:
   assets:
     - resource/a4_env.png
     - resource/unknown.ico
+    - resource/codes.json
+    - resource/env_c4.png
+    - resource/fe_041.png
 
   #
   # For details regarding fonts from package dependencies,

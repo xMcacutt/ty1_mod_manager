@@ -49,6 +49,10 @@ class Mod {
   @override
   int get hashCode => name.hashCode;
 
+  static Mod? none() {
+    return null;
+  }
+
   Future<bool> install() async {
     // Replace button with load wheel
     var modsDir = await getModsDirectory();
@@ -66,7 +70,7 @@ class Mod {
     }
     final response = await http.get(Uri.parse(downloadUrl));
     if (response.statusCode != 200) {
-      print("Could not access file at url");
+      print("Could not access file at url $downloadUrl");
       return false;
     }
     final tempDir = await getTemporaryDirectory();
@@ -75,7 +79,7 @@ class Mod {
     final bytes = await File(zipFilePath).readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
     for (final file in archive) {
-      final filePath = "$modDir/${file.name}";
+      final filePath = "${modDir.path}/${file.name}";
       if (file.isFile) {
         await File(filePath).create(recursive: true);
         await File(filePath).writeAsBytes(file.content as List<int>);
@@ -89,15 +93,17 @@ class Mod {
       final depVersion = dep['dep_version'];
       if (depName == null || depUrl == null || depVersion == null) return false;
       var depsDir = await getDepsDirectory();
-      var depDir = Directory('${depsDir.path}/$depName/$depVersion');
-      if (await depDir.exists()) continue;
-      await depDir.create();
+      var depDir = Directory('${depsDir.path}/$depName');
+      var depVerDir = Directory('${depsDir.path}/$depName/$depVersion');
+      if (await depVerDir.exists()) continue;
+      if (!await depDir.exists()) await depDir.create();
+      await depVerDir.create();
       final response = await http.get(Uri.parse(depUrl));
       if (response.statusCode != 200) {
-        print("Could not access file at url");
+        print("Could not access file at url $depUrl");
         return false;
       }
-      final depFilePath = "${depDir.path}/$depName.dll";
+      final depFilePath = "${depVerDir.path}/$depName.dll";
       await File(depFilePath).writeAsBytes(response.bodyBytes);
     }
     return true;
