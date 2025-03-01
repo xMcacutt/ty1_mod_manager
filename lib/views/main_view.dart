@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
@@ -23,6 +24,14 @@ class MainView extends StatefulWidget {
 
 class _MainViewState extends State<MainView> {
   List<Mod> selectedMods = [];
+  late Future<List<Mod>> modListFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    modListFuture = loadMods();
+    _checkForUpdate();
+  }
 
   Future<void> _checkForUpdate() async {
     Settings? settings = await Settings.loadSettings();
@@ -63,12 +72,6 @@ class _MainViewState extends State<MainView> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _checkForUpdate();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Add Scaffold here
@@ -76,7 +79,7 @@ class _MainViewState extends State<MainView> {
       body: Stack(
         children: [
           FutureBuilder<List<Mod>>(
-            future: loadMods(), // Loads the mods
+            future: modListFuture, // Loads the mods
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -110,19 +113,46 @@ class _MainViewState extends State<MainView> {
             },
           ),
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: EdgeInsets.all(20),
             child: Align(
               alignment: Alignment.bottomRight,
               child: ElevatedButton(
-                onPressed: () => onLaunchButtonPressed(selectedMods),
+                onPressed: () => onLaunchButtonPressed(context, selectedMods),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "Launch Game",
-                      style: TextStyle(
-                        fontFamily: 'SF Slapstick Comic', // Custom font name
-                        fontSize: 20, // Optional: Adjust the font size,)
+                    Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Text(
+                        "Launch Game",
+                        style: TextStyle(
+                          fontFamily: 'SF Slapstick Comic', // Custom font name
+                          fontSize: 24, // Optional: Adjust the font size,)
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: ElevatedButton(
+                onPressed: () => onAddButtonPressed(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Text(
+                        "Add Custom",
+                        style: TextStyle(
+                          fontFamily: 'SF Slapstick Comic', // Custom font name
+                          fontSize: 24, // Optional: Adjust the font size,)
+                        ),
                       ),
                     ),
                   ],
@@ -210,11 +240,50 @@ class _MainViewState extends State<MainView> {
   }
 }
 
-void onLaunchButtonPressed(List<Mod> selectedMods) async {
+void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   Settings? settings = await Settings.loadSettings();
   if (settings == null) {
     return;
   }
+
+  var conflicts = await findConflicts(selectedMods);
+  String conflictMessages = conflicts.join("\n");
+
+  bool? shouldLaunch = true;
+  if (conflicts.isNotEmpty) {
+    shouldLaunch = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Conflicts Detected"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("The following conflicts were found:"),
+              SizedBox(height: 10),
+              Text(conflictMessages),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // User chose to cancel
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // User chose to launch anyway
+              },
+              child: Text("Launch Anyway"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  if (!shouldLaunch!) return;
 
   Directory dir = Directory('${settings.tyDirectoryPath}/Plugins');
   var files = dir.listSync();
@@ -254,9 +323,14 @@ void onLaunchButtonPressed(List<Mod> selectedMods) async {
     );
   }
 
+  var argsString = settings.launchArgs;
+  var launchArgs = argsString.split(' ');
+  for (var arg in launchArgs) {
+    print(arg);
+  }
   Process result = await Process.start(
     '${settings.tyDirectoryPath}/Ty.exe',
-    [], // Command and arguments
+    launchArgs,
     workingDirectory: settings.tyDirectoryPath,
   );
 
@@ -270,23 +344,64 @@ void onLaunchButtonPressed(List<Mod> selectedMods) async {
   });
 }
 
-class ModListing extends StatelessWidget {
+void onAddButtonPressed(BuildContext context) async {
+  FilePicker filePicker = FilePickerIO();
+  var result = await filePicker.pickFiles(
+    allowMultiple: false,
+    allowedExtensions: ['zip'],
+    dialogTitle: 'Select Mod Zip...',
+  );
+
+  if (result == null || !await addCustomMod(result)) {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Invalid File"),
+          content: Text("Please select a valid mod zip file."),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Ok"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ModListing extends StatefulWidget {
+  final Mod mod;
+  final bool isSelected;
+  final ValueChanged<bool> onSelected;
+
   const ModListing({
-    super.key,
     required this.mod,
     required this.isSelected,
     required this.onSelected,
   });
 
-  final Mod mod;
-  final bool isSelected;
-  final ValueChanged<bool> onSelected;
+  @override
+  _ModListing createState() => _ModListing();
+}
+
+class _ModListing extends State<ModListing> {
+  late Future<bool> _iconExistFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _iconExistFuture = widget.mod.iconFile?.exists() ?? Future.value(false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: FutureBuilder<bool>(
-        future: mod.iconFile?.exists(),
+        future: _iconExistFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
@@ -295,45 +410,46 @@ class ModListing extends StatelessWidget {
               !snapshot.data!) {
             return Image.asset('resource/unknown.ico');
           } else {
-            return Image.file(mod.iconFile!);
+            return Image.file(widget.mod.iconFile!);
           }
         },
       ), // Display mod icon
-      title: Text(mod.name),
+      title: Text(widget.mod.name),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(mod.description),
+          Text(widget.mod.description),
           SizedBox(height: 4), // Add space
           Row(
             children: [
-              Text('Version: ${mod.version}', style: TextStyle(fontSize: 12)),
-              SizedBox(width: 10),
-              Text('Author: ${mod.author}', style: TextStyle(fontSize: 12)),
+              Text(
+                'Version: ${widget.mod.version}',
+                style: TextStyle(fontSize: 12),
+              ),
               SizedBox(width: 10),
               Text(
-                'Last Update: ${mod.lastUpdated}',
+                'Author: ${widget.mod.author}',
+                style: TextStyle(fontSize: 12),
+              ),
+              SizedBox(width: 10),
+              Text(
+                'Last Update: ${widget.mod.lastUpdated}',
                 style: TextStyle(fontSize: 12),
               ),
             ],
           ),
         ],
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Checkbox(
-            value: isSelected, // Reflect selection state
-            onChanged: (bool? value) {
-              if (value != null) {
-                onSelected(value); // Notify parent to update the selection
-              }
-            },
-          ),
-        ],
+      trailing: Switch(
+        value: widget.isSelected,
+        onChanged: (bool? value) {
+          if (value != null) {
+            widget.onSelected(value);
+          }
+        },
       ),
       onTap: () {
-        // Handle tap event (if needed)
+        widget.onSelected(!widget.isSelected);
       },
     );
   }

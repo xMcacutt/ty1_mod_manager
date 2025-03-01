@@ -71,6 +71,7 @@ class Mod {
     final response = await http.get(Uri.parse(downloadUrl));
     if (response.statusCode != 200) {
       print("Could not access file at url $downloadUrl");
+      if (await modDir.list().isEmpty) modDir.delete();
       return false;
     }
     final tempDir = await getTemporaryDirectory();
@@ -91,7 +92,7 @@ class Mod {
       final depName = dep['dep_name'];
       final depUrl = dep['dep_url'];
       final depVersion = dep['dep_version'];
-      if (depName == null || depUrl == null || depVersion == null) return false;
+      if (depName == null || depUrl == null || depVersion == null) continue;
       var depsDir = await getDepsDirectory();
       var depDir = Directory('${depsDir.path}/$depName');
       var depVerDir = Directory('${depsDir.path}/$depName/$depVersion');
@@ -101,7 +102,8 @@ class Mod {
       final response = await http.get(Uri.parse(depUrl));
       if (response.statusCode != 200) {
         print("Could not access file at url $depUrl");
-        return false;
+        if (await depDir.list().isEmpty) depDir.delete();
+        continue;
       }
       final depFilePath = "${depVerDir.path}/$depName.dll";
       await File(depFilePath).writeAsBytes(response.bodyBytes);

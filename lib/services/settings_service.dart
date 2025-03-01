@@ -4,12 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Settings {
   String tyDirectoryPath;
   bool updateManager;
+  String launchArgs;
 
-  Settings({required this.tyDirectoryPath, required this.updateManager});
+  Settings({
+    required this.tyDirectoryPath,
+    required this.updateManager,
+    required this.launchArgs,
+  });
 
   // Convert Settings object to a Map (for JSON encoding)
   Map<String, dynamic> toMap() {
-    return {'tyDirectoryPath': tyDirectoryPath, 'updateManager': updateManager};
+    return {
+      'tyDirectoryPath': tyDirectoryPath,
+      'updateManager': updateManager,
+      'launchArgs': launchArgs,
+    };
   }
 
   // Convert Map to Settings object (for decoding)
@@ -17,6 +26,7 @@ class Settings {
     return Settings(
       tyDirectoryPath: map['tyDirectoryPath'] ?? '',
       updateManager: map['updateManager'] ?? true,
+      launchArgs: map['launchArgs'] ?? '',
     );
   }
 

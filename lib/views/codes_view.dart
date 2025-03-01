@@ -1,27 +1,57 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/models/code.dart';
 import 'dart:convert';
 
 import 'package:ty1_mod_manager/models/mm_app_bar.dart'; // For JSON parsing
 
-class CodeListing extends StatelessWidget {
+class CodeListing extends StatefulWidget {
   final Code code;
   final ValueChanged<bool> onChanged; // Callback for the switch change
+  final ValueChanged<double>? onValueChanged;
 
-  CodeListing({required this.code, required this.onChanged});
+  CodeListing({
+    required this.code,
+    required this.onChanged,
+    this.onValueChanged,
+  });
+
+  @override
+  _CodeListingState createState() => _CodeListingState();
+}
+
+class _CodeListingState extends State<CodeListing> {
+  TextEditingController valueController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      title: Text(code.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Text(code.description)],
-      ),
-      value: code.isActive,
-      onChanged: onChanged,
+    return Column(
+      children: [
+        SwitchListTile(
+          title: Text(widget.code.name),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [Text(widget.code.description)],
+          ),
+          value: widget.code.isActive,
+          onChanged: widget.onChanged,
+        ),
+        if (widget.code.isValue && widget.code.isActive)
+          Padding(
+            padding: const EdgeInsets.only(left: 50, right: 100.0, bottom: 15),
+            child: Slider(
+              value: widget.code.value.toDouble(),
+              onChanged: widget.onValueChanged!,
+              max: widget.code.valueMax!.toDouble(),
+              divisions: widget.code.valueDiv,
+              min: widget.code.valueMin!.toDouble(),
+              label: widget.code.value.toString(),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -43,20 +73,49 @@ class _CodesViewState extends State<CodesView> {
   }
 
   Future<void> loadCodeData() async {
-    // Fetch mods from GitHub
     final codeJson = File("resource/codes.json");
     List<dynamic> codeData = jsonDecode(await codeJson.readAsString());
 
-    // Convert mod data into Mod objects
+    final prefs = await SharedPreferences.getInstance();
+    List<String> activeCodeDataString =
+        prefs.getStringList('active_codes') ?? [];
+
     setState(() {
-      codes = codeData.map((codeJson) => Code.fromJson(codeJson)).toList();
+      codes =
+          codeData.map((codeJson) {
+            Code code = Code.fromJson(codeJson);
+
+            // Find corresponding saved data for this code
+            String? savedCodeData = activeCodeDataString.firstWhere(
+              (data) => jsonDecode(data)['name'] == code.name,
+              orElse: () => '{}',
+            );
+
+            if (savedCodeData.isNotEmpty) {
+              Map<String, dynamic> savedData = jsonDecode(savedCodeData);
+              code.isActive = savedData['isActive'] ?? false;
+              if (code.isValue && savedData.containsKey('value')) {
+                code.value = savedData['value']; // Restore the saved value
+              }
+            }
+
+            return code;
+          }).toList();
     });
   }
 
-  void onSwitchChanged(bool value, int index) {
+  void onSwitchChanged(bool value, int index) async {
     setState(() {
       codes[index].isActive = value;
     });
+    await saveActiveCodes();
+  }
+
+  void onValueChanged(double value, int index) async {
+    setState(() {
+      codes[index].value = value.round();
+    });
+    await saveActiveCodes();
   }
 
   static void applyActiveCodes() {
@@ -65,6 +124,26 @@ class _CodesViewState extends State<CodesView> {
       print("Applying code");
       code.applyCode(); // Apply the code if it's active
     }
+  }
+
+  Future<void> saveActiveCodes() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    List<Map<String, dynamic>> activeCodeData =
+        codes.map((code) {
+          return {
+            'name': code.name,
+            'isActive': code.isActive,
+            'value':
+                code.isValue
+                    ? code.value
+                    : null, // Save value if it's a value-based code
+          };
+        }).toList();
+
+    List<String> activeCodeDataString =
+        activeCodeData.map((data) => jsonEncode(data)).toList();
+    await prefs.setStringList('active_codes', activeCodeDataString);
   }
 
   // Collect active codes
@@ -82,6 +161,7 @@ class _CodesViewState extends State<CodesView> {
           return CodeListing(
             code: codes[index],
             onChanged: (value) => onSwitchChanged(value, index),
+            onValueChanged: (value) => onValueChanged(value, index),
           );
         },
       ),

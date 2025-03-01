@@ -22,12 +22,13 @@ typedef VirtualProtectExDart =
 
 // FFI binding for the Win32 APIs needed to write to a process
 class MemoryEditor {
-  static late final DynamicLibrary kernel32;
+  static DynamicLibrary? kernel32;
   static late final DynamicLibrary psapi;
   static late final int moduleBase;
   static late int hProcess;
 
   static void init(int pid) {
+    if (kernel32 != null) return;
     kernel32 = DynamicLibrary.open('kernel32.dll');
     psapi = DynamicLibrary.open('psapi.dll');
   }
@@ -37,6 +38,7 @@ class MemoryEditor {
       hProcess = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
       if (hProcess != 0) {
         // Process is now open, you can proceed
+        await Future.delayed(Duration(milliseconds: 1000));
         getModuleBaseAddress();
         break;
       }
@@ -50,7 +52,7 @@ class MemoryEditor {
   }
 
   static void virtualProtect(Pointer<Uint32> addr, int numBytes) {
-    final VirtualProtectExDart VirtualProtectEx = kernel32
+    final VirtualProtectExDart VirtualProtectEx = kernel32!
         .lookupFunction<VirtualProtectExC, VirtualProtectExDart>(
           'VirtualProtectEx',
         );

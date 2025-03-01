@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/views/about_view.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import 'package:ty1_mod_manager/views/mod_directory_view.dart';
 import 'views/main_view.dart' show MainView;
@@ -33,6 +34,8 @@ class ModManagerApp extends StatelessWidget {
           case '/settings':
             page = SettingsView();
             break;
+          case '/about':
+            page = AboutView();
           default:
             return null; // Prevents errors for undefined routes
         }

@@ -9,7 +9,7 @@ class AppColors {
   static const Color altText = Color(0xff999999);
   static const Color invertedText = Color(0xff000000);
   static const Color mainAccent = Color(0xffe79941);
-  static const Color mainAccentOn = Color.fromARGB(255, 127, 105, 79);
+  static const Color mainAccentOn = Color.fromARGB(255, 117, 80, 38);
   static const Color altAccent = Color(0xff29609f);
   static const Color altAccentOn = Color.fromARGB(255, 64, 83, 104);
 }
@@ -43,4 +43,13 @@ ThemeData appTheme = ThemeData(
     ),
   ),
   dialogTheme: DialogThemeData(backgroundColor: AppColors.altBack),
+  sliderTheme: SliderThemeData(
+    valueIndicatorShape: PaddleSliderValueIndicatorShape(),
+    valueIndicatorColor: AppColors.mainAccentOn,
+    valueIndicatorTextStyle: TextStyle(
+      color: AppColors.mainText,
+      fontFamily: 'Komika_Hands',
+      fontSize: 18,
+    ),
+  ),
 );

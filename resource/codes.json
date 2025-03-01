@@ -75,12 +75,16 @@
     }, 
     {
         "name": "Opal Requirement",
+        "is_value": true,
+        "value_min": 0,
+        "value_max": 300,
+        "value_div": 30,
         "description": "Set the number of opals required to obtain each opal thunder egg.",
         "codes": 
         [
             {
                 "address": "137504",
-                "bytes": "XXXXXXXX"
+                "bytes": "X4"
             }
         ]
     }, 

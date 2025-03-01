@@ -13,8 +13,8 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   bool _autoUpdateModManager = false;
-  bool _autoUpdateMods = false;
   TextEditingController _tyDirectoryController = TextEditingController();
+  TextEditingController _launchArgsController = TextEditingController();
 
   // Function to open file picker to select directory
   Future<void> _selectDirectory() async {
@@ -70,6 +70,7 @@ class _SettingsViewState extends State<SettingsView> {
       setState(() {
         _tyDirectoryController.text = settings.tyDirectoryPath;
         _autoUpdateModManager = settings.updateManager;
+        _launchArgsController.text = settings.launchArgs;
       });
     }
   }
@@ -104,6 +105,7 @@ class _SettingsViewState extends State<SettingsView> {
     Settings settings = Settings(
       tyDirectoryPath: _tyDirectoryController.text,
       updateManager: _autoUpdateModManager,
+      launchArgs: _launchArgsController.text,
     );
 
     await settings.saveSettings(); // Save the settings
@@ -187,6 +189,15 @@ class _SettingsViewState extends State<SettingsView> {
             ),
             SizedBox(height: 10),
 
+            TextFormField(
+              controller: _launchArgsController,
+              decoration: InputDecoration(
+                labelText: "Launch Arguments",
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            SizedBox(height: 20),
             // Save Settings Button
             ElevatedButton(
               onPressed: _saveSettings,

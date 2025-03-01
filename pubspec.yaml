@@ -47,6 +47,7 @@ dependencies:
   shared_preferences: ^2.5.2
   archive: ^4.0.3
   ffi: ^2.1.4
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +91,9 @@ flutter:
     - family: SF_Slapstick_Comic
       fonts:
         - asset: resource/SF_Slapstick_Comic.ttf
+    - family: Komika_Hands
+      fonts:
+        - asset: resource/KOMIKAHB.ttf
 
   assets:
     - resource/a4_env.png
