@@ -12,6 +12,7 @@
       ],
       "conflicts": ["MTP Console Mod", "Collectible Tracker", "Memory Leak Manager", "Tyger Utility"],
       "author": "xMcacutt",
+      "last_updated": "2025-02-25",
       "dll_name": "Ty1AP-Client",
       "icon_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/master/favico.ico",
       "download_url": "https://github.com/xMcacutt/Ty1AP-Client/releases/latest/download/Ty1AP-Client.zip"
@@ -29,6 +30,7 @@
       ],
       "conflicts": ["Archipelago Client", "Tyger Utility"],
       "author": "xMcacutt",
+      "last_updated": "2024-11-06",
       "dll_name": "Ty Collectible Tracker Plugin",
       "icon_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/master/favico.ico",
       "download_url": "https://github.com/xMcacutt/Ty-Collectible-Tracker-Plugin/releases/latest/download/Ty.Collectible.Tracker.Plugin.zip"
