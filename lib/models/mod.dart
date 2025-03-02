@@ -54,7 +54,6 @@ class Mod {
   }
 
   Future<bool> install() async {
-    // Replace button with load wheel
     var modsDir = await getModsDirectory();
     var modDir = Directory('${modsDir.path}/$name');
     if (await modDir.exists()) {

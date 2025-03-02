@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,8 +71,8 @@ class _CodesViewState extends State<CodesView> {
   }
 
   Future<void> loadCodeData() async {
-    final codeJson = File("resource/codes.json");
-    List<dynamic> codeData = jsonDecode(await codeJson.readAsString());
+    final codeJson = await rootBundle.loadString('resource/codes.json');
+    List<dynamic> codeData = jsonDecode(codeJson);
 
     final prefs = await SharedPreferences.getInstance();
     List<String> activeCodeDataString =

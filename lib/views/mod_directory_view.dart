@@ -108,25 +108,29 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
 
     if (response.statusCode == 200) {
       List<dynamic> modData = jsonDecode(response.body);
-
+      List<Mod> remoteMods = [];
       // Convert mod data into Mod objects
-      List<Mod> remoteMods =
-          modData.map((modJson) => Mod.fromJson(modJson)).toList();
+      for (var modListing in modData) {
+        String modInfoUrl = modListing['mod_info_url'];
+        final response = await http.get(Uri.parse(modInfoUrl));
+        if (response.statusCode == 200) {
+          remoteMods.add(Mod.fromJson(await jsonDecode(response.body)));
+        }
+      }
 
       // Load local mods
       List<Mod> localMods = await loadMods(); // Load mods already installed
 
       // Categorize mods into installed and available
-      availableMods =
-          remoteMods
-              .where(
+      availableMods = remoteMods;
+      /*              .where(
                 (mod) =>
                     !localMods.any(
                       (installedMod) => installedMod.name == mod.name,
                     ),
               )
               .toList();
-
+*/
       allMods = [...installedMods, ...availableMods]; // All mods to display
       displayedMods = List.from(allMods); // Initially, show all mods
     }

@@ -20,11 +20,10 @@ typedef VirtualProtectExDart =
       Pointer<Uint32> lpflOldProtect,
     );
 
-// FFI binding for the Win32 APIs needed to write to a process
 class MemoryEditor {
   static DynamicLibrary? kernel32;
   static late final DynamicLibrary psapi;
-  static late final int moduleBase;
+  static late int moduleBase;
   static late int hProcess;
 
   static void init(int pid) {
@@ -57,7 +56,7 @@ class MemoryEditor {
           'VirtualProtectEx',
         );
     final oldProtection = calloc<Uint32>();
-    final result = VirtualProtectEx(
+    VirtualProtectEx(
       hProcess,
       addr,
       numBytes,

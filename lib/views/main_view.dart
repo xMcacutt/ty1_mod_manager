@@ -7,9 +7,7 @@ import 'package:path_provider/path_provider.dart'
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
-import 'package:ty1_mod_manager/theme.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
-import 'package:win32/win32.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart';
 import 'dart:io';
@@ -301,17 +299,28 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   }
 
   final appSupportDir = await getApplicationSupportDirectory();
+  Map<String, String> depVersions = {};
   for (Mod mod in selectedMods) {
     for (var dep in mod.dependencies) {
       var parts = dep.split(' ');
       var depName = parts[0];
       var depVer = parts[1];
+      if (depVersions.containsKey(depName)) {
+        var existingVer = depVersions[depName]!;
+        if (_compareVersions(depVer, existingVer) <= 0) {
+          continue;
+        }
+      }
+
+      depVersions[depName] = depVer;
       var depDir = Directory('${appSupportDir.path}/deps/$depName/$depVer');
       for (var file in depDir.listSync()) {
         if (file is File) {
-          await file.copy(
-            '${settings.tyDirectoryPath}/Plugins/Dependencies/${path.basename(file.path)}',
-          );
+          var destFilePath =
+              '${settings.tyDirectoryPath}/Plugins/Dependencies/${path.basename(file.path)}';
+          if (!File(destFilePath).existsSync()) {
+            await file.copy(destFilePath);
+          }
         }
       }
     }
@@ -344,10 +353,30 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   });
 }
 
+int _compareVersions(String version1, String version2) {
+  var v1Parts = version1.split('.').map(int.parse).toList();
+  var v2Parts = version2.split('.').map(int.parse).toList();
+
+  var length =
+      v1Parts.length > v2Parts.length ? v1Parts.length : v2Parts.length;
+  for (int i = 0; i < length; i++) {
+    int v1 = i < v1Parts.length ? v1Parts[i] : 0;
+    int v2 = i < v2Parts.length ? v2Parts[i] : 0;
+
+    if (v1 > v2) {
+      return 1; // version1 is newer
+    } else if (v1 < v2) {
+      return -1; // version2 is newer
+    }
+  }
+
+  return 0; // versions are the same
+}
+
 void onAddButtonPressed(BuildContext context) async {
-  FilePicker filePicker = FilePickerIO();
-  var result = await filePicker.pickFiles(
+  var result = await FilePicker.platform.pickFiles(
     allowMultiple: false,
+    type: FileType.custom,
     allowedExtensions: ['zip'],
     dialogTitle: 'Select Mod Zip...',
   );

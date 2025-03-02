@@ -90,10 +90,10 @@ flutter:
   fonts:
     - family: SF_Slapstick_Comic
       fonts:
-        - asset: resource/SF_Slapstick_Comic.ttf
+        - asset: fonts/SF_Slapstick_Comic.ttf
     - family: Komika_Hands
       fonts:
-        - asset: resource/KOMIKAHB.ttf
+        - asset: fonts/KOMIKAHB.ttf
 
   assets:
     - resource/a4_env.png

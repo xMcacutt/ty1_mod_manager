@@ -1,38 +1,10 @@
 [
-    {
-      "name": "Archipelago Client",
-      "version": "1.1.6",
-      "description": "Client mod for Archipelago.gg implementation.",
-      "dependencies": [
-        {
-            "dep_name": "TygerMemory",
-            "dep_version": "1.0.3",
-            "dep_url": "https://github.com/xMcacutt/TygerMemory1/releases/download/1.0.3/TygerMemory.dll"
-        }
-      ],
-      "conflicts": ["MTP Console Mod", "Collectible Tracker", "Memory Leak Manager", "Tyger Utility"],
-      "author": "xMcacutt",
-      "last_updated": "2025-02-25",
-      "dll_name": "Ty1AP-Client",
-      "icon_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/master/favico.ico",
-      "download_url": "https://github.com/xMcacutt/Ty1AP-Client/releases/latest/download/Ty1AP-Client.zip"
-    },
-    {
-      "name": "Collectible Tracker",
-      "version": "1.1.0",
-      "description": "Mod to show collectible totals overlay.",
-      "dependencies": [
-        {
-            "dep_name": "TygerMemory",
-            "dep_version": "1.0.3",
-            "dep_url": "https://github.com/xMcacutt/TygerMemory1/releases/download/1.0.3/TygerMemory.dll"
-        }
-      ],
-      "conflicts": ["Archipelago Client", "Tyger Utility"],
-      "author": "xMcacutt",
-      "last_updated": "2024-11-06",
-      "dll_name": "Ty Collectible Tracker Plugin",
-      "icon_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/master/favico.ico",
-      "download_url": "https://github.com/xMcacutt/Ty-Collectible-Tracker-Plugin/releases/latest/download/Ty.Collectible.Tracker.Plugin.zip"
-    }
+  {
+    "name": "Archipelago Client",
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/master/mod_info.json"
+  },
+  {
+    "name": "Collectible Tracker",
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/master/mod_info.json"
+  }
 ]

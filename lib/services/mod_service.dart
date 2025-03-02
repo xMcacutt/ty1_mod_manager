@@ -59,6 +59,7 @@ Future<List<Mod>> loadMods() async {
 }
 
 Future<bool> addCustomMod(FilePickerResult result) async {
+  print("1");
   if (result.files.isEmpty) return false;
   var zip = File(result.files.single.path!);
   var tempDir = await getTemporaryDirectory();
@@ -66,9 +67,13 @@ Future<bool> addCustomMod(FilePickerResult result) async {
   await zip.copy(zipFilePath);
   final bytes = await File(zipFilePath).readAsBytes();
   final archive = ZipDecoder().decodeBytes(bytes);
+  print("2");
   if (archive.files.length > 4) return false;
+  print("3");
   if (archive.files.length < 3) return false;
+  print("4");
   if (!archive.files.any((x) => x.name == "mod_info.json")) return false;
+  print("5");
   var tempCopyDir = await Directory('${tempDir.path}/tyMMmod').create();
   for (final file in archive) {
     final filePath = "${tempCopyDir.path}/${file.name}";
