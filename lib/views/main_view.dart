@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart'
     show getApplicationSupportDirectory;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
@@ -24,12 +25,13 @@ class MainView extends StatefulWidget {
 class _MainViewState extends State<MainView> with RouteAware {
   List<Mod> selectedMods = [];
   late Future<List<Mod>> modListFuture;
+  bool? isFirstRun;
 
   @override
   void initState() {
     super.initState();
+    _checkFirstRun();
     modListFuture = modService.loadMods();
-    _checkForUpdate();
   }
 
   @override
@@ -48,6 +50,93 @@ class _MainViewState extends State<MainView> with RouteAware {
   void didPopNext() {
     super.didPopNext();
     modListFuture = modService.loadMods();
+  }
+
+  Future<void> _checkFirstRun() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? firstRun = prefs.getBool('isFirstRun');
+    if (firstRun == null || firstRun) {
+      // First time setup, show the setup screen
+      setState(() {
+        isFirstRun = true;
+      });
+    } else {
+      // Not the first time, proceed with the regular home screen
+      setState(() {
+        isFirstRun = false;
+      });
+    }
+    if (isFirstRun != null && !isFirstRun!) {
+      print(isFirstRun);
+      _checkForUpdate();
+    }
+  }
+
+  _completeSetup(bool autoComplete) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstRun', false); // Mark the setup as completed
+    if (!autoComplete) {
+      setState(() {
+        isFirstRun = false;
+      });
+      return;
+    }
+    var result = await _openDirectoryPicker();
+    if (result) {
+      if (mounted) {
+        setState(() {
+          isFirstRun = false; // Update UI to show the regular home screen
+        });
+      }
+    }
+  }
+
+  Future<bool> _openDirectoryPicker() async {
+    String? result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: "Select vanilla Ty install folder...",
+      lockParentWindow: true,
+    );
+
+    if (result != null) {
+      var source = Directory(result);
+      var destination = Directory(
+        "${source.parent.path}/Ty the Tasmanian Tiger - Mod Managed",
+      );
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return Dialog(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 20),
+                  Text('Copying files, please wait...'),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      await copyDirectory(source, destination);
+      Navigator.of(context, rootNavigator: true).pop();
+      var settings = Settings(
+        tyDirectoryPath: destination.path,
+        launchArgs: '',
+        updateManager: true,
+      );
+      await settings.saveSettings();
+      if (mounted) {
+        setState(() {
+          isFirstRun = false; // Update UI to show the regular home screen
+        });
+      }
+      return true;
+    }
+    return false;
   }
 
   Future<void> _checkForUpdate() async {
@@ -177,6 +266,27 @@ class _MainViewState extends State<MainView> with RouteAware {
               ),
             ),
           ),
+          if (isFirstRun == true || isFirstRun == null)
+            AlertDialog(
+              title: Text('Welcome!'),
+              content: Text(
+                'Do you want me to automatically set up your modded Ty directory?',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    _completeSetup(false);
+                  },
+                  child: Text('No'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _completeSetup(true);
+                  },
+                  child: Text('Yes'),
+                ),
+              ],
+            ),
         ],
       ),
       drawer: Drawer(

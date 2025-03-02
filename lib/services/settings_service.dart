@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings {
@@ -56,5 +57,32 @@ class Settings {
       return Settings.fromJson(jsonString);
     }
     return null; // Return null if no settings are saved yet
+  }
+}
+
+Future<void> copyDirectory(Directory source, Directory destination) async {
+  // Check if the source directory exists
+  if (!await source.exists()) {
+    print('Source directory does not exist');
+    return;
+  }
+
+  // Create the destination directory if it doesn't exist
+  if (!await destination.exists()) {
+    await destination.create(recursive: true);
+  }
+
+  // List all files and directories in the source directory
+  await for (var entity in source.list(recursive: false)) {
+    if (entity is File) {
+      // Copy the files to the destination directory
+      await entity.copy('${destination.path}/${entity.uri.pathSegments.last}');
+    } else if (entity is Directory) {
+      // Recursively copy the subdirectories
+      await copyDirectory(
+        entity,
+        Directory('${destination.path}/${entity.uri.pathSegments.last}'),
+      );
+    }
   }
 }

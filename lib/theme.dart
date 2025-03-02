@@ -6,7 +6,7 @@ class AppColors {
   static const Color altBack = Color(0xff343638);
   static const Color specialBack = Color(0xff4c4e50);
   static const Color mainText = Color(0xffffffff);
-  static const Color altText = Color(0xff999999);
+  static const Color altText = Color.fromARGB(255, 185, 185, 185);
   static const Color invertedText = Color(0xff000000);
   static const Color mainAccent = Color(0xffe79941);
   static const Color mainAccentOn = Color.fromARGB(255, 117, 80, 38);
