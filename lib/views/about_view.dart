@@ -51,7 +51,9 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () {
-                    final url = Uri.parse('https://discord.gg/2jRZZcknkM');
+                    final url = Uri.parse(
+                      'https://github.com/xMcacutt/ty1_mod_manager/blob/master/README.md#Adding-Mods',
+                    );
                     _launchURL(url);
                   },
                   child: const Text(
@@ -96,7 +98,9 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () {
-                    final url = Uri.parse('https://discord.gg/2jRZZcknkM');
+                    final url = Uri.parse(
+                      'https://github.com/xMcacutt/ty1_mod_manager/blob/master/README.md#Adding-Mods',
+                    );
                     _launchURL(url);
                   },
                   child: const Text(
