@@ -1,10 +1,10 @@
 [
   {
     "name": "Archipelago Client",
-    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/master/mod_info.json"
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1AP-Client/refs/heads/master/mod_info.json"
   },
   {
     "name": "Collectible Tracker",
-    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/master/mod_info.json"
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/refs/heads/master/mod_info.json"
   }
 ]

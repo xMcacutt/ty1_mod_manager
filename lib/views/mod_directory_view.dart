@@ -103,7 +103,7 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
 
     // Fetch mods from GitHub
     final modDirectoryJsonUrl =
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/master/mod_directory.json";
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/mod_directory.json";
     final response = await http.get(Uri.parse(modDirectoryJsonUrl));
 
     if (response.statusCode == 200) {
