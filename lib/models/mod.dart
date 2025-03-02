@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ty1_mod_manager/services/mod_service.dart';
+import 'package:ty1_mod_manager/views/main_view.dart';
 
 class Mod {
   final String name;
@@ -121,7 +122,7 @@ class Mod {
     final author = modInfo['author'] ?? '';
     final lastUpdated = modInfo['last_updated'] ?? '';
     final description = modInfo['description'] ?? '';
-    final dependencies = List<String>.from(modInfo['dependencies'] ?? []);
+    final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
     final directoryIconPath = modInfo['icon_url'] ?? '';
     final iconFile = File('${modDir.path}/favico.ico');

@@ -6,5 +6,9 @@
   {
     "name": "Collectible Tracker",
     "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-Collectible-Tracker-Plugin/refs/heads/master/mod_info.json"
+  },
+  {
+    "name": "Memory Leak Manager",
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-MLM-Plugin/refs/heads/master/mod_info.json"
   }
 ]

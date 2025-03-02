@@ -4,12 +4,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart'
     show getApplicationSupportDirectory;
+import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import '../models/mod.dart';
-import '../services/mod_service.dart';
+import '../services/mod_service.dart' as modService;
 import 'dart:io';
 import '../services/settings_service.dart';
 
@@ -20,15 +21,33 @@ class MainView extends StatefulWidget {
   _MainViewState createState() => _MainViewState();
 }
 
-class _MainViewState extends State<MainView> {
+class _MainViewState extends State<MainView> with RouteAware {
   List<Mod> selectedMods = [];
   late Future<List<Mod>> modListFuture;
 
   @override
   void initState() {
     super.initState();
-    modListFuture = loadMods();
+    modListFuture = modService.loadMods();
     _checkForUpdate();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    modListFuture = modService.loadMods();
   }
 
   Future<void> _checkForUpdate() async {
@@ -244,7 +263,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
     return;
   }
 
-  var conflicts = await findConflicts(selectedMods);
+  var conflicts = await modService.findConflicts(selectedMods);
   String conflictMessages = conflicts.join("\n");
 
   bool? shouldLaunch = true;
@@ -307,7 +326,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
       var depVer = parts[1];
       if (depVersions.containsKey(depName)) {
         var existingVer = depVersions[depName]!;
-        if (_compareVersions(depVer, existingVer) <= 0) {
+        if (modService.compareVersions(depVer, existingVer) <= 0) {
           continue;
         }
       }
@@ -353,26 +372,6 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   });
 }
 
-int _compareVersions(String version1, String version2) {
-  var v1Parts = version1.split('.').map(int.parse).toList();
-  var v2Parts = version2.split('.').map(int.parse).toList();
-
-  var length =
-      v1Parts.length > v2Parts.length ? v1Parts.length : v2Parts.length;
-  for (int i = 0; i < length; i++) {
-    int v1 = i < v1Parts.length ? v1Parts[i] : 0;
-    int v2 = i < v2Parts.length ? v2Parts[i] : 0;
-
-    if (v1 > v2) {
-      return 1; // version1 is newer
-    } else if (v1 < v2) {
-      return -1; // version2 is newer
-    }
-  }
-
-  return 0; // versions are the same
-}
-
 void onAddButtonPressed(BuildContext context) async {
   var result = await FilePicker.platform.pickFiles(
     allowMultiple: false,
@@ -381,7 +380,7 @@ void onAddButtonPressed(BuildContext context) async {
     dialogTitle: 'Select Mod Zip...',
   );
 
-  if (result == null || !await addCustomMod(result)) {
+  if (result == null || !await modService.addCustomMod(result)) {
     await showDialog(
       context: context,
       builder: (context) {

@@ -44,14 +44,11 @@ Future<List<Mod>> loadMods() async {
     return [];
   }
 
-  final modDirs =
-      modsDir.listSync().whereType<Directory>(); // List of mod folders
+  final modDirs = modsDir.listSync().whereType<Directory>();
 
   final mods = <Mod>[];
   for (var modDir in modDirs) {
-    final mod = await Mod.fromDirectory(
-      modDir,
-    ); // Load the mod from the directory
+    final mod = await Mod.fromDirectory(modDir);
     mods.add(mod);
   }
 
@@ -59,7 +56,6 @@ Future<List<Mod>> loadMods() async {
 }
 
 Future<bool> addCustomMod(FilePickerResult result) async {
-  print("1");
   if (result.files.isEmpty) return false;
   var zip = File(result.files.single.path!);
   var tempDir = await getTemporaryDirectory();
@@ -67,13 +63,9 @@ Future<bool> addCustomMod(FilePickerResult result) async {
   await zip.copy(zipFilePath);
   final bytes = await File(zipFilePath).readAsBytes();
   final archive = ZipDecoder().decodeBytes(bytes);
-  print("2");
   if (archive.files.length > 4) return false;
-  print("3");
   if (archive.files.length < 3) return false;
-  print("4");
   if (!archive.files.any((x) => x.name == "mod_info.json")) return false;
-  print("5");
   var tempCopyDir = await Directory('${tempDir.path}/tyMMmod').create();
   for (final file in archive) {
     final filePath = "${tempCopyDir.path}/${file.name}";
@@ -98,4 +90,24 @@ Future<List<String>> findConflicts(List<Mod> mods) async {
     );
   }
   return allConflicts.toList();
+}
+
+int compareVersions(String version1, String version2) {
+  var v1Parts = version1.split('.').map(int.parse).toList();
+  var v2Parts = version2.split('.').map(int.parse).toList();
+
+  var length =
+      v1Parts.length > v2Parts.length ? v1Parts.length : v2Parts.length;
+  for (int i = 0; i < length; i++) {
+    int v1 = i < v1Parts.length ? v1Parts[i] : 0;
+    int v2 = i < v2Parts.length ? v2Parts[i] : 0;
+
+    if (v1 > v2) {
+      return 1; // version1 is newer
+    } else if (v1 < v2) {
+      return -1; // version2 is newer
+    }
+  }
+
+  return 0; // versions are the same
 }

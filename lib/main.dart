@@ -10,12 +10,15 @@ void main() {
   runApp(ModManagerApp());
 }
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 class ModManagerApp extends StatelessWidget {
   const ModManagerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [routeObserver],
       title: 'Ty the Tasmanian Tiger - Mod Manager',
       theme: appTheme,
       initialRoute: '/mods',

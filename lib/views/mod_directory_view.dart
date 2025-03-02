@@ -71,7 +71,6 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
   List<Mod> allMods = []; // List of all mods (from GitHub and local)
   List<Mod> displayedMods = []; // List of mods to display
   List<Mod> installedMods = []; // List of mods already installed
-  List<Mod> availableMods = []; // List of mods available to install
   bool isLoading = false;
   TextEditingController searchController = TextEditingController();
   Set<String> modsInstalling = {};
@@ -87,7 +86,6 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
     setState(() {
       modsInstalling.add(mod.name); // Show loading indicator
     });
-
     await mod.install(); // Perform async installation
 
     setState(() {
@@ -111,7 +109,10 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
       List<Mod> remoteMods = [];
       // Convert mod data into Mod objects
       for (var modListing in modData) {
-        String modInfoUrl = modListing['mod_info_url'];
+        String modInfoUrl =
+            modListing['mod_info_url'] +
+            '?${DateTime.now().millisecondsSinceEpoch}';
+        print(modInfoUrl);
         final response = await http.get(Uri.parse(modInfoUrl));
         if (response.statusCode == 200) {
           remoteMods.add(Mod.fromJson(await jsonDecode(response.body)));
@@ -120,19 +121,30 @@ class _ModDirectoryViewState extends State<ModDirectoryView> {
 
       // Load local mods
       List<Mod> localMods = await loadMods(); // Load mods already installed
+      var updatableMods =
+          remoteMods.where((remoteMod) {
+            var localMod =
+                localMods
+                    .where((localMod) => localMod.name == remoteMod.name)
+                    .firstOrNull;
+            return localMod == null ||
+                compareVersions(localMod.version, remoteMod.version) != 1;
+          }).toList();
 
-      // Categorize mods into installed and available
-      availableMods = remoteMods;
-      /*              .where(
-                (mod) =>
-                    !localMods.any(
-                      (installedMod) => installedMod.name == mod.name,
-                    ),
-              )
-              .toList();
-*/
-      allMods = [...installedMods, ...availableMods]; // All mods to display
-      displayedMods = List.from(allMods); // Initially, show all mods
+      installedMods =
+          remoteMods.where((remoteMod) {
+            // Find the corresponding local mod by name
+            var localMod =
+                localMods
+                    .where((localMod) => localMod.name == remoteMod.name)
+                    .firstOrNull;
+
+            return localMod != null &&
+                compareVersions(localMod.version, remoteMod.version) != -1;
+          }).toList();
+
+      allMods = [...installedMods, ...updatableMods]; // All mods to display
+      displayedMods = updatableMods; // Initially, show all mods
     }
 
     setState(() {
