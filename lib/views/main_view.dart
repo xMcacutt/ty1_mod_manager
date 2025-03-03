@@ -8,13 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
+import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart' as modService;
 import 'dart:io';
-import '../services/settings_service.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -129,6 +129,7 @@ class _MainViewState extends State<MainView> with RouteAware {
         launchArgs: '',
         updateManager: true,
       );
+      await isValidDirectory(destination.path);
       await settings.saveSettings();
       if (mounted) {
         setState(() {

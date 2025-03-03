@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings {
@@ -85,4 +86,34 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
       );
     }
   }
+}
+
+Future<bool> isValidDirectory(String directoryPath) async {
+  final baseDirectory = Directory(directoryPath);
+  final exe = File('${baseDirectory.path}/TY.exe');
+  if (!await exe.exists()) {
+    return false;
+  }
+  final pluginDirectory = Directory("$directoryPath/Plugins");
+  if (!await pluginDirectory.exists()) {
+    pluginDirectory.create();
+  }
+  final depsDirectory = Directory("$directoryPath/Plugins/Dependencies");
+  if (!await depsDirectory.exists()) {
+    depsDirectory.create();
+  }
+  final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
+  if (!await dll.exists()) {
+    final response = await http.get(
+      Uri.parse(
+        "https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll",
+      ),
+    );
+    if (response.statusCode != 200) {
+      print("Download failed.");
+      return false;
+    }
+    File(dll.path).writeAsBytesSync(response.bodyBytes);
+  }
+  return true;
 }

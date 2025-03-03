@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'dart:io';
@@ -27,33 +28,6 @@ class _SettingsViewState extends State<SettingsView> {
             selectedDirectory; // Set the selected directory path in the text controller
       });
     }
-  }
-
-  Future<bool> _isValidDirectory(String directoryPath) async {
-    final baseDirectory = Directory(directoryPath);
-    final exe = File('${baseDirectory.path}/TY.exe');
-    if (!await exe.exists()) {
-      return false;
-    }
-    final pluginDirectory = Directory("$directoryPath/Plugins");
-    if (!await pluginDirectory.exists()) {
-      pluginDirectory.create();
-    }
-    final depsDirectory = Directory("$directoryPath/Plugins/Dependencies");
-    if (!await depsDirectory.exists()) {
-      depsDirectory.create();
-    }
-    final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
-    if (!await dll.exists()) {
-      if (!await download(
-        context,
-        "https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll",
-        "${baseDirectory.path}/XInput9_1_0.dll",
-      )) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @override
@@ -97,7 +71,7 @@ class _SettingsViewState extends State<SettingsView> {
 
     await Future.delayed(Duration(milliseconds: 500));
 
-    if (!await _isValidDirectory(_tyDirectoryController.text)) {
+    if (!await isValidDirectory(_tyDirectoryController.text)) {
       Navigator.of(context, rootNavigator: true).pop();
       return;
     }
