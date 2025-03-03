@@ -124,5 +124,20 @@
                 "bytes": "90 90"
             }
         ]
+    },
+    {
+        "name": "Reduce Crate Burn Time",
+        "is_value": true,
+        "value_min": 0,
+        "value_max": 300,
+        "value_div": 30,
+        "description": "Reduces time taken for crates to break when hit with the flamerang.",
+        "codes": 
+        [
+            {
+                "address": "5E66F",
+                "bytes": "X4"
+            }
+        ]
     }
 ]
