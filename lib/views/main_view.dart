@@ -491,7 +491,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
     }
     if (mod.patchFile != null) {
       await mod.patchFile!.copy(
-        '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.patchFile!.path)}',
+        '${settings.tyDirectoryPath}/${path.basename(mod.patchFile!.path)}',
       );
     }
   }
