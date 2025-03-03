@@ -45,10 +45,10 @@ String getAppDirectory() {
 /// Download and prepare the update
 Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
   final tempDir = await getTemporaryDirectory();
-  final updateFolder = "${tempDir.path}/update";
-  final zipFilePath = "${tempDir.path}/update.zip";
-  final batchFilePath = "${tempDir.path}/update.bat";
-  final appDir = getAppDirectory();
+  final updateFolder = "${tempDir.path}\\update";
+  final zipFilePath = "${tempDir.path}\\update.zip";
+  final batchFilePath = "${tempDir.path}\\update.bat";
+  final appDir = Directory.current.path;
 
   // Ensure update directory is clean
   Directory(updateFolder).createSync(recursive: true);
@@ -81,20 +81,37 @@ Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
   final exeName =
       Platform.resolvedExecutable.split(Platform.pathSeparator).last;
   final batchContent = '''
-    @echo off
-    taskkill /IM "$exeName" /F
-    timeout /t 2
-    xcopy /E /Y "$updateFolder/*" "$appDir/"
-    start "" "$appDir/$exeName"
-    exit
+  @echo off
+  set EXE_NAME="$exeName"
+  set APP_DIR="$appDir"
+  set UPDATE_FOLDER="$updateFolder"
+
+  echo Killing the old process...
+  taskkill /IM %EXE_NAME% /F
+  if %ERRORLEVEL% neq 0 echo Failed to terminate process & pause
+
+  echo Waiting for 2 seconds...
+  timeout /t 2
+
+  echo Copying files...
+  xcopy /E /Y "%UPDATE_FOLDER%\\*" "%APP_DIR%\\"
+  if %ERRORLEVEL% neq 0 echo Failed to copy files & pause
+
+  echo Starting the new application...
+  start "" "%APP_DIR%\\%EXE_NAME%"
+  pause
+  exit
   ''';
 
   File(batchFilePath).writeAsStringSync(batchContent);
   print("Update script created.");
+  print(batchFilePath);
   return batchFilePath;
 }
 
 void updateApp(String batchFilePath) {
-  Process.run("cmd.exe", ["/c", batchFilePath]);
-  exit(0);
+  Process.start("cmd.exe", [
+    "/c",
+    batchFilePath,
+  ], mode: ProcessStartMode.detached);
 }

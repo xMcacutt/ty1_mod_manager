@@ -1,0 +1,128 @@
+[
+    {
+        "name": "Keyboard Outback Vectoring",
+        "description": "Allow movement vectoring as bushpig on keyboard.",
+        "codes": 
+        [
+            {
+                "address": "17311B",
+                "bytes": "90 90"
+            }
+        ]
+    },
+    {
+        "name": "Faster Rang Swap",
+        "description": "Swapping rang is allowed before rangs return.",
+        "codes": 
+        [
+            {
+                "address": "162B8A",
+                "bytes": "90 90 90 90 90 90"
+            }
+        ]
+    },
+    {
+        "name": "Menu Mouse Fix",
+        "description": "Moves the menu options on the pause menu to prevent the mouse triggering them accidentally.",
+        "codes":
+        [
+            {
+                "address": "2025B0",
+                "bytes": "00 00 A0 C0"
+            }
+        ]
+    },
+    {
+        "name": "Disable Magnet RNG",
+        "description": "Quarter pie will never spawn from baskets in place of magnets.",
+        "codes": 
+        [
+            {
+                "address": "139077",
+                "bytes": "90 90"
+            },
+            {
+                "address": "139090",
+                "bytes": "90 90 90 90 90 90 90 90 90"
+            }
+        ]
+    }, 
+    {
+        "name": "Controller Camera Aiming",
+        "description": "Boomerangs will throw where camera is pointed on controller.",
+        "codes": 
+        [
+            {
+                "address": "16A6BC",
+                "bytes": "90 90"
+            }
+        ]
+    }, 
+    {
+        "name": "Open Game Info",
+        "description": "After entering the any level, all game info will be open.",
+        "codes": 
+        [
+            {
+                "address": "E55CD",
+                "bytes": "90 90 90 90 90"
+            },
+            {
+                "address": "E6A4D",
+                "bytes": "90 90 90 90 90"
+            }
+        ]
+    }, 
+    {
+        "name": "Opal Requirement",
+        "is_value": true,
+        "value_min": 0,
+        "value_max": 300,
+        "value_div": 30,
+        "description": "Set the number of opals required to obtain each opal thunder egg.",
+        "codes": 
+        [
+            {
+                "address": "137504",
+                "bytes": "X4"
+            }
+        ]
+    }, 
+    {
+        "name": "Disable Sly Shadows",
+        "description": "Sets shadows to off on leaving Sly fight.",
+        "codes": 
+        [
+            {
+                "address": "C8236",
+                "bytes": "00"
+            }
+        ]
+    }, 
+    {
+        "name": "Disable Camera Overrides",
+        "description": "Prevent the camera from being overridden in certain areas.",
+        "codes": 
+        [
+            {
+                "address": "4B3E6",
+                "bytes": "90 90 90 90 90 90 90 90 90 90"
+            }
+        ]
+    },
+    {
+        "name": "Always Show Inviscrates",
+        "description": "Invis crates will always be opaque regardless of holding or using the infrarang.",
+        "codes": 
+        [
+            {
+                "address": "5FCA6",
+                "bytes": "90 90"
+            },
+            {
+                "address": "5FCAF",
+                "bytes": "90 90"
+            }
+        ]
+    }
+]
