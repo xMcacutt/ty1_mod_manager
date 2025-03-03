@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ty1_mod_manager/services/version_service.dart';
 
 /// URL where the latest version info is stored
 const String latestVersionUrl =
@@ -22,7 +23,7 @@ Future<String?> checkForUpdate() async {
     final latestVersion = latestData["version"];
     final downloadUrl = latestData["download_url"];
 
-    final currentVersion = await getCurrentVersion();
+    final currentVersion = getAppVersion();
     if (currentVersion == latestVersion) {
       print("Already up-to-date (v$currentVersion).");
       return null;
@@ -34,18 +35,6 @@ Future<String?> checkForUpdate() async {
     print("Update check failed: $e");
     return null;
   }
-}
-
-/// Get the currently installed version
-Future<String> getCurrentVersion() async {
-  final appDir = getAppDirectory();
-  final versionFile = File("$appDir/version.txt");
-
-  if (!versionFile.existsSync()) {
-    versionFile.writeAsStringSync("1.0.0");
-  }
-
-  return versionFile.readAsStringSync().trim();
 }
 
 /// Get the directory where the app is running

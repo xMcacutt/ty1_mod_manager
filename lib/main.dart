@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/about_view.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import 'package:ty1_mod_manager/views/mod_directory_view.dart';
@@ -7,6 +8,7 @@ import 'theme.dart';
 import 'views/settings_view.dart';
 
 void main() {
+  initAppVersion();
   runApp(ModManagerApp());
 }
 

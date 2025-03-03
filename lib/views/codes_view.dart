@@ -67,10 +67,17 @@ class _CodesViewState extends State<CodesView> {
   @override
   void initState() {
     super.initState();
-    loadCodeData();
+    setCodes();
   }
 
-  Future<void> loadCodeData() async {
+  Future<void> setCodes() async {
+    final loadedCodes = await loadCodeData();
+    setState(() {
+      codes = loadedCodes;
+    });
+  }
+
+  static Future<List<Code>> loadCodeData() async {
     final codeJson = await rootBundle.loadString('resource/codes.json');
     List<dynamic> codeData = jsonDecode(codeJson);
 
@@ -78,28 +85,25 @@ class _CodesViewState extends State<CodesView> {
     List<String> activeCodeDataString =
         prefs.getStringList('active_codes') ?? [];
 
-    setState(() {
-      codes =
-          codeData.map((codeJson) {
-            Code code = Code.fromJson(codeJson);
+    return codeData.map((codeJson) {
+      Code code = Code.fromJson(codeJson);
 
-            // Find corresponding saved data for this code
-            String? savedCodeData = activeCodeDataString.firstWhere(
-              (data) => jsonDecode(data)['name'] == code.name,
-              orElse: () => '{}',
-            );
+      // Find corresponding saved data for this code
+      String? savedCodeData = activeCodeDataString.firstWhere(
+        (data) => jsonDecode(data)['name'] == code.name,
+        orElse: () => '{}',
+      );
 
-            if (savedCodeData.isNotEmpty) {
-              Map<String, dynamic> savedData = jsonDecode(savedCodeData);
-              code.isActive = savedData['isActive'] ?? false;
-              if (code.isValue && savedData.containsKey('value')) {
-                code.value = savedData['value']; // Restore the saved value
-              }
-            }
+      if (savedCodeData.isNotEmpty) {
+        Map<String, dynamic> savedData = jsonDecode(savedCodeData);
+        code.isActive = savedData['isActive'] ?? false;
+        if (code.isValue && savedData.containsKey('value')) {
+          code.value = savedData['value']; // Restore the saved value
+        }
+      }
 
-            return code;
-          }).toList();
-    });
+      return code;
+    }).toList();
   }
 
   void onSwitchChanged(bool value, int index) async {
@@ -116,8 +120,10 @@ class _CodesViewState extends State<CodesView> {
     await saveActiveCodes();
   }
 
-  static void applyActiveCodes() {
-    List<Code> activeCodes = getActiveCodes();
+  static void applyActiveCodes() async {
+    var loadedCodes = await loadCodeData();
+    List<Code> activeCodes =
+        loadedCodes.where((code) => code.isActive).toList();
     for (var code in activeCodes) {
       print("Applying code");
       code.applyCode(); // Apply the code if it's active

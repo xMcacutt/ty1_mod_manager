@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
+import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -26,8 +27,8 @@ class AboutView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Version 1.0.0',
+                Text(
+                  'Version ${getAppVersion()}',
                   style: TextStyle(
                     fontSize: 28,
                     color: AppColors.altText,

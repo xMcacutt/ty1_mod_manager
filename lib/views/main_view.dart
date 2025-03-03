@@ -9,6 +9,7 @@ import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
+import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart' as modService;
@@ -313,7 +314,7 @@ class _MainViewState extends State<MainView> with RouteAware {
                       ),
                     ),
                     Text(
-                      'Version 1.0.0',
+                      'Version ${getAppVersion()}',
                       style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                   ],
@@ -413,6 +414,9 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   if (!shouldLaunch!) return;
 
   Directory dir = Directory('${settings.tyDirectoryPath}/Plugins');
+  if (!dir.existsSync()) {
+    dir.createSync();
+  }
   var files = dir.listSync();
   for (var file in files) {
     if (file is Directory) {
@@ -422,6 +426,9 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   }
 
   dir = Directory('${settings.tyDirectoryPath}/Plugins/Dependencies');
+  if (!dir.existsSync()) {
+    dir.createSync();
+  }
   files = dir.listSync();
   for (var file in files) {
     await file.delete();
