@@ -109,5 +109,20 @@
                 "bytes": "90 90 90 90 90 90 90 90 90 90"
             }
         ]
+    },
+    {
+        "name": "Always Show Inviscrates",
+        "description": "Invis crates will always be opaque regardless of holding or using the infrarang.",
+        "codes": 
+        [
+            {
+                "address": "5FCA6",
+                "bytes": "90 90"
+            },
+            {
+                "address": "5FCAF",
+                "bytes": "90 90"
+            }
+        ]
     }
 ]
