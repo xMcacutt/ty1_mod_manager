@@ -460,7 +460,8 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   for (Mod mod in selectedMods) {
     for (var dep in mod.dependencies) {
       var depName = dep['dep_name'];
-      var depVer = dep['dep_ver'];
+      var depVer = dep['dep_version'];
+
       if (depVersions.containsKey(depName)) {
         var existingVer = depVersions[depName]!;
         if (modService.compareVersions(depVer, existingVer) <= 0) {
