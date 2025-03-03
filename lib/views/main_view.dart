@@ -368,9 +368,30 @@ class _MainViewState extends State<MainView> with RouteAware {
   }
 }
 
+Future<void> showErrorBox(BuildContext context, String message) async {
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // User chose to cancel
+            },
+            child: Text("Okay"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   Settings? settings = await Settings.loadSettings();
   if (settings == null) {
+    await showErrorBox(context, "Settings could not be loaded.");
     return;
   }
 
@@ -438,9 +459,8 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   Map<String, String> depVersions = {};
   for (Mod mod in selectedMods) {
     for (var dep in mod.dependencies) {
-      var parts = dep.split(' ');
-      var depName = parts[0];
-      var depVer = parts[1];
+      var depName = dep['dep_name'];
+      var depVer = dep['dep_ver'];
       if (depVersions.containsKey(depName)) {
         var existingVer = depVersions[depName]!;
         if (modService.compareVersions(depVer, existingVer) <= 0) {
@@ -460,12 +480,20 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
         }
       }
     }
-    if (mod.dllFile == null) {
+    if (mod.dllFile == null && mod.patchFile == null) {
+      await showErrorBox(context, "Mod contains no data.");
       return;
     }
-    await mod.dllFile!.copy(
-      '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}',
-    );
+    if (mod.dllFile != null) {
+      await mod.dllFile!.copy(
+        '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}',
+      );
+    }
+    if (mod.patchFile != null) {
+      await mod.patchFile!.copy(
+        '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.patchFile!.path)}',
+      );
+    }
   }
 
   var argsString = settings.launchArgs;

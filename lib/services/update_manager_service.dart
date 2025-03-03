@@ -85,8 +85,6 @@ Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
     taskkill /IM "$exeName" /F
     timeout /t 2
     xcopy /E /Y "$updateFolder/*" "$appDir/"
-    rem Modify version.txt to update the version
-    echo $newVersion > "$appDir/version.txt"
     start "" "$appDir/$exeName"
     exit
   ''';
