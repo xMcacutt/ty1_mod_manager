@@ -82,12 +82,12 @@ Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
       Platform.resolvedExecutable.split(Platform.pathSeparator).last;
   final batchContent = '''
   @echo off
-  set EXE_NAME="$exeName"
-  set APP_DIR="$appDir"
-  set UPDATE_FOLDER="$updateFolder"
+  set "EXE_NAME=$exeName"
+  set "APP_DIR=$appDir"
+  set "UPDATE_FOLDER=$updateFolder"
 
   echo Killing the old process...
-  taskkill /IM %EXE_NAME% /F
+  taskkill /IM "%EXE_NAME%" /F
   if %ERRORLEVEL% neq 0 echo Failed to terminate process & pause
 
   echo Waiting for 2 seconds...
