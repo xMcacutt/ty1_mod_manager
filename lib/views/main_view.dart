@@ -611,6 +611,9 @@ class _ModListing extends State<ModListing> {
                       }
                     },
                   )
+                  : (widget.mod.iconFile != null &&
+                      widget.mod.iconFile!.existsSync())
+                  ? Image.file(widget.mod.iconFile!)
                   : Image.asset('resource/unknown.ico');
             }
           },
