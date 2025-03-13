@@ -40,6 +40,7 @@ Below is a list of the fields which should be defined in the json.
 | `download_url` | The url to download the zip file containing the mod files listed below. This must link directly to the download.                                                                                                                                | Yes       |
 | `icon_url`     | A link to a `.ico` file. It is recommended that the ico file uploaded as part of the mod's git repo. The raw github link should be used to avoid unnecessary api calls. If no icon is provided, the mod will show up with a question mark icon. | No        |
 | `last_updated` | The date of last update. This should be kept in YYYY-MM-DD format. Please stick to this format and update with the mod                                                                                                                          | Yes       |
+| `website`      | A web url which can be accessed from the right click context menu in `my mods`. Readme link usually goes here                                                                                                                                   | No        |
 
 #### Dependencies
 
@@ -59,6 +60,7 @@ Dependency dlls can be added to your mod_info as long as they can be downloaded 
   "dll_name": "Ty Collectible Tracker Plugin",
   "description": "Tool to view current and total collectible counts overlaid onto the game.",
   "version": "1.1.1",
+  "website": "",
   "dependencies": [
     {
       "dep_name": "TygerMemory",
@@ -82,7 +84,7 @@ Once the `mod_info.json` file has been created, you'll need to upload it prefera
 
 ### Releasing Your Mods
 
-When creating a release on github or any file host, you'll need to provide the mod as a zip file. The zip file should contain a `favico.ico` file which is used when displaying the mod in the installed mods list; the `mod_info.json` file you should already have created; and either a `Patch_PC.rkv` file or a `dll` file for you mod or both. 
+When creating a release on github or any file host, you'll need to provide the mod as a zip file. The zip file should contain the `mod_info.json` file you should already have created; either a `Patch_PC.rkv` file or a `dll` file for you mod or both; and a `favico.ico` file which is used when displaying the mod in the installed mods list. If no `favico.ico` file is added, the `icon_url` from `mod_info.json` will be used instead;
 
 These files will be extracted to the AppData/Roaming/io.mcacutt/mods directory upon installation.
 

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/models/code.dart';
 import 'dart:convert';
@@ -78,7 +81,20 @@ class _CodesViewState extends State<CodesView> {
   }
 
   static Future<List<Code>> loadCodeData() async {
-    final codeJson = await rootBundle.loadString('resource/codes.json');
+    late String codeJson;
+    final response = await http.get(
+      Uri.parse(
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/resource/codes.json?${DateTime.now().millisecondsSinceEpoch}",
+      ),
+    );
+    if (response.statusCode != 200) {
+      codeJson = await rootBundle.loadString('resource/codes.json');
+      print("Download failed.");
+      ;
+    } else {
+      codeJson = response.body;
+    }
+
     List<dynamic> codeData = jsonDecode(codeJson);
 
     final prefs = await SharedPreferences.getInstance();

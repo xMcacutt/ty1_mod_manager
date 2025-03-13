@@ -24,6 +24,7 @@ ThemeData appTheme = ThemeData(
     titleTextStyle: TextStyle(color: AppColors.mainText, fontSize: 20),
     iconTheme: IconThemeData(color: AppColors.mainAccent),
   ),
+  popupMenuTheme: PopupMenuThemeData(color: AppColors.altBack),
   drawerTheme: DrawerThemeData(backgroundColor: AppColors.altBack),
   colorScheme: ColorScheme.dark(
     primary: AppColors.mainAccent,

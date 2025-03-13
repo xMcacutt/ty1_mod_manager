@@ -21,6 +21,8 @@ class Mod {
   final String lastUpdated;
   final String dllName;
   final String downloadUrl;
+  final String website;
+  final Directory? modDir;
 
   Mod({
     required this.name,
@@ -36,6 +38,8 @@ class Mod {
     required this.directoryIconPath,
     required this.dllName,
     required this.downloadUrl,
+    required this.website,
+    this.modDir,
   });
 
   @override
@@ -122,6 +126,7 @@ class Mod {
     final author = modInfo['author'] ?? '';
     final lastUpdated = modInfo['last_updated'] ?? '';
     final description = modInfo['description'] ?? '';
+    final website = modInfo['website'] ?? '';
     final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
     final directoryIconPath = modInfo['icon_url'] ?? '';
@@ -145,6 +150,8 @@ class Mod {
       directoryIconPath: directoryIconPath,
       dllName: dllName,
       downloadUrl: downloadUrl,
+      website: website,
+      modDir: modDir,
     );
   }
 
@@ -154,6 +161,7 @@ class Mod {
     final author = modInfo['author'] ?? '';
     final lastUpdated = modInfo['last_updated'] ?? '';
     final description = modInfo['description'] ?? '';
+    final website = modInfo['website'] ?? '';
     final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
     final directoryIconPath = modInfo['icon_url'] ?? '';
@@ -171,6 +179,7 @@ class Mod {
       directoryIconPath: directoryIconPath,
       dllName: dllName,
       downloadUrl: downloadUrl,
+      website: website,
     );
   }
 }

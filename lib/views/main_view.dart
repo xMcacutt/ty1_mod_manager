@@ -12,6 +12,7 @@ import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/mod.dart';
 import '../services/mod_service.dart' as modService;
 import 'dart:io';
@@ -456,6 +457,11 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
     await file.delete();
   }
 
+  var patch = File('${settings.tyDirectoryPath}/Patch_PC.rkv');
+  if (patch.existsSync()) {
+    await patch.delete();
+  }
+
   final appSupportDir = await getApplicationSupportDirectory();
   Map<String, String> depVersions = {};
   for (Mod mod in selectedMods) {
@@ -482,16 +488,20 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
         }
       }
     }
-    if (mod.dllFile == null && mod.patchFile == null) {
-      await showErrorBox(context, "Mod contains no data.");
+    if (mod.dllFile == null || mod.patchFile == null) {
+      await showErrorBox(context, "Mod files are null");
       return;
     }
-    if (mod.dllFile != null) {
+    if (!mod.dllFile!.existsSync() && !mod.patchFile!.existsSync()) {
+      await showErrorBox(context, "Mod contains no data");
+      return;
+    }
+    if (mod.dllFile!.existsSync()) {
       await mod.dllFile!.copy(
         '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}',
       );
     }
-    if (mod.patchFile != null) {
+    if (mod.patchFile!.existsSync()) {
       await mod.patchFile!.copy(
         '${settings.tyDirectoryPath}/${path.basename(mod.patchFile!.path)}',
       );
@@ -569,63 +579,128 @@ class _ModListing extends State<ModListing> {
   @override
   void initState() {
     super.initState();
+
     _iconExistFuture = widget.mod.iconFile?.exists() ?? Future.value(false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: FutureBuilder<bool>(
-        future: _iconExistFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasError ||
-              !snapshot.hasData ||
-              !snapshot.data!) {
-            return Image.asset('resource/unknown.ico');
-          } else {
-            return Image.file(widget.mod.iconFile!);
-          }
-        },
-      ), // Display mod icon
-      title: Text(widget.mod.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.mod.description),
-          SizedBox(height: 4), // Add space
-          Row(
-            children: [
-              Text(
-                'Version: ${widget.mod.version}',
-                style: TextStyle(fontSize: 12),
-              ),
-              SizedBox(width: 10),
-              Text(
-                'Author: ${widget.mod.author}',
-                style: TextStyle(fontSize: 12),
-              ),
-              SizedBox(width: 10),
-              Text(
-                'Last Update: ${widget.mod.lastUpdated}',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ],
-      ),
-      trailing: Switch(
-        value: widget.isSelected,
-        onChanged: (bool? value) {
-          if (value != null) {
-            widget.onSelected(value);
-          }
-        },
-      ),
-      onTap: () {
-        widget.onSelected(!widget.isSelected);
+    return GestureDetector(
+      onSecondaryTapDown: (details) {
+        _showContextMenu(context, details.globalPosition);
       },
+      child: ListTile(
+        leading: FutureBuilder<bool>(
+          future: _iconExistFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError || !(snapshot.data ?? false)) {
+              return Image.asset('resource/unknown.ico');
+            } else {
+              return widget.mod.directoryIconPath != null &&
+                      widget.mod.directoryIconPath!.isNotEmpty
+                  ? Image.network(
+                    widget.mod.directoryIconPath!,
+                    errorBuilder: (context, error, stackTrace) {
+                      if (widget.mod.iconFile != null &&
+                          widget.mod.iconFile!.existsSync()) {
+                        return Image.file(widget.mod.iconFile!);
+                      } else {
+                        return Image.asset('resource/unknown.ico');
+                      }
+                    },
+                  )
+                  : Image.asset('resource/unknown.ico');
+            }
+          },
+        ), // Display mod icon
+        title: Text(widget.mod.name),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.mod.description),
+            SizedBox(height: 4), // Add space
+            Row(
+              children: [
+                Text(
+                  'Version: ${widget.mod.version}',
+                  style: TextStyle(fontSize: 12),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Author: ${widget.mod.author}',
+                  style: TextStyle(fontSize: 12),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Last Update: ${widget.mod.lastUpdated}',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: Switch(
+          value: widget.isSelected,
+          onChanged: (bool? value) {
+            if (value != null) {
+              widget.onSelected(value);
+            }
+          },
+        ),
+        onTap: () {
+          widget.onSelected(!widget.isSelected);
+        },
+      ),
     );
+  }
+
+  void _showContextMenu(BuildContext context, Offset position) {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        position & const Size(40, 40), // Position near right-click
+        Offset.zero & overlay.size, // Reference to screen size
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: !widget.mod.website.isEmpty,
+          child: Text("Mod Website"),
+          value: 'website',
+        ),
+        PopupMenuItem(child: Text("Uninstall"), value: 'uninstall'),
+      ],
+    ).then((value) {
+      if (value != null) {
+        _handleMenuSelection(value);
+      }
+    });
+  }
+
+  void _handleMenuSelection(String value) async {
+    switch (value) {
+      case 'website':
+        final Uri url = Uri.parse(widget.mod.website);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url);
+        }
+        break;
+      case 'uninstall':
+        await widget.mod.modDir!.delete(recursive: true);
+        if (mounted) {
+          setState(() {});
+        }
+        if (context.findAncestorStateOfType<_MainViewState>() != null) {
+          context.findAncestorStateOfType<_MainViewState>()!.setState(() {
+            context.findAncestorStateOfType<_MainViewState>()!.modListFuture =
+                modService.loadMods();
+          });
+        }
+        break;
+    }
   }
 }
