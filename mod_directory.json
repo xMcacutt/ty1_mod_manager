@@ -10,5 +10,13 @@
   {
     "name": "Memory Leak Manager",
     "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty-MLM-Plugin/refs/heads/master/mod_info.json"
+  },
+  {
+    "name": "Tyger Utility",
+    "mod_info_url": "https://raw.githubusercontent.com/ElusiveFluffy/Tyger-Utility/refs/heads/master/mod_info.json"
+  },
+  {
+    "name": "PC_External Loader",
+    "mod_info_url": "https://raw.githubusercontent.com/ElusiveFluffy/PC_External-Loader/refs/heads/master/mod_info.json"
   }
 ]
