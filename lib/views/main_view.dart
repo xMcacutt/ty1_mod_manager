@@ -595,13 +595,13 @@ class _ModListing extends State<ModListing> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return CircularProgressIndicator();
-            } else if (snapshot.hasError || !(snapshot.data ?? false)) {
+            } else if (snapshot.hasError) {
               return Image.asset('resource/unknown.ico');
             } else {
-              return widget.mod.directoryIconPath != null &&
-                      widget.mod.directoryIconPath!.isNotEmpty
+              return widget.mod.iconUrl != null &&
+                      widget.mod.iconUrl!.isNotEmpty
                   ? Image.network(
-                    widget.mod.directoryIconPath!,
+                    widget.mod.iconUrl!,
                     errorBuilder: (context, error, stackTrace) {
                       if (widget.mod.iconFile != null &&
                           widget.mod.iconFile!.existsSync()) {

@@ -13,7 +13,7 @@ class Mod {
   final String description;
   final List<dynamic> dependencies;
   final List<String> conflicts;
-  final String? directoryIconPath;
+  final String? iconUrl;
   final File? iconFile;
   final File? patchFile;
   final File? dllFile;
@@ -35,7 +35,7 @@ class Mod {
     this.dllFile,
     required this.lastUpdated,
     required this.author,
-    required this.directoryIconPath,
+    required this.iconUrl,
     required this.dllName,
     required this.downloadUrl,
     required this.website,
@@ -129,7 +129,7 @@ class Mod {
     final website = modInfo['website'] ?? '';
     final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final directoryIconPath = modInfo['icon_url'] ?? '';
+    final iconUrl = modInfo['icon_url'] ?? 'help me';
     final iconFile = File('${modDir.path}/favico.ico');
     final patchFile = File('${modDir.path}/Patch_PC.rkv');
     final dllName = modInfo['dll_name'] ?? '';
@@ -147,7 +147,7 @@ class Mod {
       patchFile: patchFile,
       author: author,
       lastUpdated: lastUpdated,
-      directoryIconPath: directoryIconPath,
+      iconUrl: iconUrl,
       dllName: dllName,
       downloadUrl: downloadUrl,
       website: website,
@@ -164,7 +164,7 @@ class Mod {
     final website = modInfo['website'] ?? '';
     final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final directoryIconPath = modInfo['icon_url'] ?? '';
+    final iconUrl = modInfo['icon_url'] ?? '';
     final dllName = modInfo['dll_name'] ?? '';
     final downloadUrl = modInfo['download_url'] ?? '';
 
@@ -176,7 +176,7 @@ class Mod {
       description: description,
       dependencies: dependencies,
       conflicts: conflicts,
-      directoryIconPath: directoryIconPath,
+      iconUrl: iconUrl,
       dllName: dllName,
       downloadUrl: downloadUrl,
       website: website,

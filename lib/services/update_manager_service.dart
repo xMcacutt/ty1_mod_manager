@@ -6,13 +6,11 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 
-/// URL where the latest version info is stored
-const String latestVersionUrl =
-    "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json";
-
 /// Check for updates and trigger download if needed
 Future<String?> checkForUpdate() async {
   try {
+    String latestVersionUrl =
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?${DateTime.now().millisecondsSinceEpoch}";
     final response = await http.get(Uri.parse(latestVersionUrl));
     if (response.statusCode != 200) {
       print("Could not access file at url");

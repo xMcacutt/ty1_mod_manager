@@ -27,7 +27,7 @@ class ModDirectoryListing extends StatelessWidget {
 
     return ListTile(
       leading: Image.network(
-        mod.directoryIconPath as String,
+        mod.iconUrl as String,
         errorBuilder: (context, error, stackTrace) {
           return Image.asset('resource/unknown.ico');
         },
