@@ -2,8 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart'
-    show getApplicationSupportDirectory;
+import 'package:path_provider/path_provider.dart' show getApplicationSupportDirectory;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/mm_app_bar.dart';
@@ -101,9 +100,7 @@ class _MainViewState extends State<MainView> with RouteAware {
 
     if (result != null) {
       var source = Directory(result);
-      var destination = Directory(
-        "${source.parent.path}/Ty the Tasmanian Tiger - Mod Managed",
-      );
+      var destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger - Mod Managed");
 
       showDialog(
         context: context,
@@ -113,11 +110,7 @@ class _MainViewState extends State<MainView> with RouteAware {
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Row(
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 20),
-                  Text('Copying files, please wait...'),
-                ],
+                children: [CircularProgressIndicator(), SizedBox(width: 20), Text('Copying files, please wait...')],
               ),
             ),
           );
@@ -125,11 +118,7 @@ class _MainViewState extends State<MainView> with RouteAware {
       );
       await copyDirectory(source, destination);
       Navigator.of(context, rootNavigator: true).pop();
-      var settings = Settings(
-        tyDirectoryPath: destination.path,
-        launchArgs: '',
-        updateManager: true,
-      );
+      var settings = Settings(tyDirectoryPath: destination.path, launchArgs: '', updateManager: true);
       await isValidDirectory(destination.path);
       await settings.saveSettings();
       if (mounted) {
@@ -157,9 +146,7 @@ class _MainViewState extends State<MainView> with RouteAware {
       builder: (context) {
         return AlertDialog(
           title: Text("Update Available"),
-          content: Text(
-            "A new update is available. Would you like to update now?",
-          ),
+          content: Text("A new update is available. Would you like to update now?"),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -250,7 +237,13 @@ class _MainViewState extends State<MainView> with RouteAware {
             child: Align(
               alignment: Alignment.bottomLeft,
               child: ElevatedButton(
-                onPressed: () => onAddButtonPressed(context),
+                onPressed:
+                    () => onAddButtonPressed(
+                      context,
+                      () => setState(() {
+                        modListFuture = modService.loadMods();
+                      }),
+                    ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -272,9 +265,7 @@ class _MainViewState extends State<MainView> with RouteAware {
           if (isFirstRun == true || isFirstRun == null)
             AlertDialog(
               title: Text('Welcome!'),
-              content: Text(
-                'Do you want me to automatically set up your modded Ty directory?',
-              ),
+              content: Text('Do you want me to automatically set up your modded Ty directory?'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -297,10 +288,7 @@ class _MainViewState extends State<MainView> with RouteAware {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('resource/fe_041.png'),
-                  fit: BoxFit.cover,
-                ),
+                image: DecorationImage(image: AssetImage('resource/fe_041.png'), fit: BoxFit.cover),
               ),
               child: Container(
                 child: Column(
@@ -309,16 +297,9 @@ class _MainViewState extends State<MainView> with RouteAware {
                     SizedBox(height: 10),
                     Text(
                       'Mod Manager',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    Text(
-                      'Version ${getAppVersion()}',
-                      style: TextStyle(fontSize: 16, color: Colors.white70),
-                    ),
+                    Text('Version ${getAppVersion()}', style: TextStyle(fontSize: 16, color: Colors.white70)),
                   ],
                 ),
               ),
@@ -409,11 +390,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
           title: Text("Conflicts Detected"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("The following conflicts were found:"),
-              SizedBox(height: 10),
-              Text(conflictMessages),
-            ],
+            children: [Text("The following conflicts were found:"), SizedBox(height: 10), Text(conflictMessages)],
           ),
           actions: [
             TextButton(
@@ -480,8 +457,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
       var depDir = Directory('${appSupportDir.path}/deps/$depName/$depVer');
       for (var file in depDir.listSync()) {
         if (file is File) {
-          var destFilePath =
-              '${settings.tyDirectoryPath}/Plugins/Dependencies/${path.basename(file.path)}';
+          var destFilePath = '${settings.tyDirectoryPath}/Plugins/Dependencies/${path.basename(file.path)}';
           if (!File(destFilePath).existsSync()) {
             await file.copy(destFilePath);
           }
@@ -497,14 +473,10 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
       return;
     }
     if (mod.dllFile!.existsSync()) {
-      await mod.dllFile!.copy(
-        '${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}',
-      );
+      await mod.dllFile!.copy('${settings.tyDirectoryPath}/Plugins/${path.basename(mod.dllFile!.path)}');
     }
     if (mod.patchFile!.existsSync()) {
-      await mod.patchFile!.copy(
-        '${settings.tyDirectoryPath}/${path.basename(mod.patchFile!.path)}',
-      );
+      await mod.patchFile!.copy('${settings.tyDirectoryPath}/${path.basename(mod.patchFile!.path)}');
     }
   }
 
@@ -529,7 +501,7 @@ void onLaunchButtonPressed(BuildContext context, List<Mod> selectedMods) async {
   });
 }
 
-void onAddButtonPressed(BuildContext context) async {
+void onAddButtonPressed(BuildContext context, VoidCallback refreshMods) async {
   var result = await FilePicker.platform.pickFiles(
     allowMultiple: false,
     type: FileType.custom,
@@ -555,6 +527,8 @@ void onAddButtonPressed(BuildContext context) async {
         );
       },
     );
+  } else {
+    refreshMods();
   }
 }
 
@@ -563,11 +537,7 @@ class ModListing extends StatefulWidget {
   final bool isSelected;
   final ValueChanged<bool> onSelected;
 
-  const ModListing({
-    required this.mod,
-    required this.isSelected,
-    required this.onSelected,
-  });
+  const ModListing({required this.mod, required this.isSelected, required this.onSelected});
 
   @override
   _ModListing createState() => _ModListing();
@@ -598,21 +568,18 @@ class _ModListing extends State<ModListing> {
             } else if (snapshot.hasError) {
               return Image.asset('resource/unknown.ico');
             } else {
-              return widget.mod.iconUrl != null &&
-                      widget.mod.iconUrl!.isNotEmpty
+              return widget.mod.iconUrl != null && widget.mod.iconUrl!.isNotEmpty
                   ? Image.network(
                     widget.mod.iconUrl!,
                     errorBuilder: (context, error, stackTrace) {
-                      if (widget.mod.iconFile != null &&
-                          widget.mod.iconFile!.existsSync()) {
+                      if (widget.mod.iconFile != null && widget.mod.iconFile!.existsSync()) {
                         return Image.file(widget.mod.iconFile!);
                       } else {
                         return Image.asset('resource/unknown.ico');
                       }
                     },
                   )
-                  : (widget.mod.iconFile != null &&
-                      widget.mod.iconFile!.existsSync())
+                  : (widget.mod.iconFile != null && widget.mod.iconFile!.existsSync())
                   ? Image.file(widget.mod.iconFile!)
                   : Image.asset('resource/unknown.ico');
             }
@@ -626,20 +593,11 @@ class _ModListing extends State<ModListing> {
             SizedBox(height: 4), // Add space
             Row(
               children: [
-                Text(
-                  'Version: ${widget.mod.version}',
-                  style: TextStyle(fontSize: 12),
-                ),
+                Text('Version: ${widget.mod.version}', style: TextStyle(fontSize: 12)),
                 SizedBox(width: 10),
-                Text(
-                  'Author: ${widget.mod.author}',
-                  style: TextStyle(fontSize: 12),
-                ),
+                Text('Author: ${widget.mod.author}', style: TextStyle(fontSize: 12)),
                 SizedBox(width: 10),
-                Text(
-                  'Last Update: ${widget.mod.lastUpdated}',
-                  style: TextStyle(fontSize: 12),
-                ),
+                Text('Last Update: ${widget.mod.lastUpdated}', style: TextStyle(fontSize: 12)),
               ],
             ),
           ],
@@ -660,8 +618,7 @@ class _ModListing extends State<ModListing> {
   }
 
   void _showContextMenu(BuildContext context, Offset position) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
@@ -670,11 +627,7 @@ class _ModListing extends State<ModListing> {
         Offset.zero & overlay.size, // Reference to screen size
       ),
       items: [
-        PopupMenuItem(
-          enabled: !widget.mod.website.isEmpty,
-          child: Text("Mod Website"),
-          value: 'website',
-        ),
+        PopupMenuItem(enabled: !widget.mod.website.isEmpty, child: Text("Mod Website"), value: 'website'),
         PopupMenuItem(child: Text("Uninstall"), value: 'uninstall'),
       ],
     ).then((value) {
@@ -699,8 +652,7 @@ class _ModListing extends State<ModListing> {
         }
         if (context.findAncestorStateOfType<_MainViewState>() != null) {
           context.findAncestorStateOfType<_MainViewState>()!.setState(() {
-            context.findAncestorStateOfType<_MainViewState>()!.modListFuture =
-                modService.loadMods();
+            context.findAncestorStateOfType<_MainViewState>()!.modListFuture = modService.loadMods();
           });
         }
         break;

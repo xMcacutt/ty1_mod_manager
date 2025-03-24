@@ -58,40 +58,7 @@ class Mod {
     return null;
   }
 
-  Future<bool> install() async {
-    var modsDir = await getModsDirectory();
-    var modDir = Directory('${modsDir.path}/$name');
-    if (await modDir.exists()) {
-      var modInfoFile = File('${modDir.path}/mod_info.json');
-      final modInfoJson = await modInfoFile.readAsString();
-      final modInfo = jsonDecode(modInfoJson);
-      var myVersion = modInfo['version'];
-      if (myVersion == null || myVersion == version) {
-        return false;
-      }
-    } else {
-      modDir.create();
-    }
-    final response = await http.get(Uri.parse(downloadUrl));
-    if (response.statusCode != 200) {
-      print("Could not access file at url $downloadUrl");
-      if (await modDir.list().isEmpty) modDir.delete();
-      return false;
-    }
-    final tempDir = await getTemporaryDirectory();
-    final zipFilePath = "${tempDir.path}/$name.zip";
-    await File(zipFilePath).writeAsBytes(response.bodyBytes);
-    final bytes = await File(zipFilePath).readAsBytes();
-    final archive = ZipDecoder().decodeBytes(bytes);
-    for (final file in archive) {
-      final filePath = "${modDir.path}/${file.name}";
-      if (file.isFile) {
-        await File(filePath).create(recursive: true);
-        await File(filePath).writeAsBytes(file.content as List<int>);
-      } else {
-        await Directory(filePath).create(recursive: true);
-      }
-    }
+  Future<bool> installDeps() async {
     for (final dep in dependencies) {
       final depName = dep['dep_name'];
       final depUrl = dep['dep_url'];
@@ -115,11 +82,54 @@ class Mod {
     return true;
   }
 
+  Future<bool> createModDir(Directory modDir) async {
+    if (await modDir.exists()) {
+      var modInfoFile = File('${modDir.path}/mod_info.json');
+      final modInfoJson = await modInfoFile.readAsString();
+      final modInfo = await jsonDecode(modInfoJson);
+      var myVersion = modInfo['version'];
+      if (myVersion == null || myVersion == version) {
+        return false;
+      }
+    } else {
+      await modDir.create();
+    }
+    return true;
+  }
+
+  Future<bool> install() async {
+    var modsDir = await getModsDirectory();
+    var modDir = Directory('${modsDir.path}/$name');
+    if (!await createModDir(modDir)) return false;
+    final response = await http.get(Uri.parse(downloadUrl));
+    if (response.statusCode != 200) {
+      print("Could not access file at url $downloadUrl");
+      if (await modDir.list().isEmpty) modDir.delete();
+      return false;
+    }
+    final tempDir = await getTemporaryDirectory();
+    final zipFilePath = "${tempDir.path}/$name.zip";
+    await File(zipFilePath).writeAsBytes(response.bodyBytes);
+    final bytes = await File(zipFilePath).readAsBytes();
+    final archive = ZipDecoder().decodeBytes(bytes);
+    for (final file in archive) {
+      final filePath = "${modDir.path}/${file.name}";
+      if (file.isFile) {
+        await File(filePath).create(recursive: true);
+        await File(filePath).writeAsBytes(file.content as List<int>);
+      } else {
+        await Directory(filePath).create(recursive: true);
+      }
+    }
+    await installDeps();
+    return true;
+  }
+
   // Factory method to create a Mod instance from mod_info.json and other files
   static Future<Mod> fromDirectory(Directory modDir) async {
     final modInfoFile = File('${modDir.path}/mod_info.json');
     final modInfoJson = await modInfoFile.readAsString();
-    final modInfo = jsonDecode(modInfoJson);
+    final modInfo = await jsonDecode(modInfoJson);
 
     final version = modInfo['version'] ?? '';
     final name = modInfo['name'] ?? '';
