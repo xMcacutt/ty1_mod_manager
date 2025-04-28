@@ -5,9 +5,10 @@ import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
+import 'package:ty1_mod_manager/services/settings_service.dart';
 
 /// Check for updates and trigger download if needed
-Future<String?> checkForUpdate() async {
+Future<String?> checkForUpdate({bool updateFramework = true}) async {
   try {
     String latestVersionUrl =
         "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?${DateTime.now().millisecondsSinceEpoch}";
@@ -28,11 +29,29 @@ Future<String?> checkForUpdate() async {
     }
 
     print("New version available: $latestVersion. Downloading...");
+    if (updateFramework && await downloadAndUpdateTygerFramework() == false) return null;
     return await downloadAndPrepareUpdate(downloadUrl, latestVersion);
   } catch (e) {
     print("Update check failed: $e");
     return null;
   }
+}
+
+Future<bool> downloadAndUpdateTygerFramework() async {
+  var settings = await Settings.loadSettings();
+  if (settings == null) return false;
+  var baseDirectory = Directory(settings.tyDirectoryPath);
+  final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
+  if (await dll.exists()) dll.delete();
+  final response = await http.get(
+    Uri.parse("https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll"),
+  );
+  if (response.statusCode != 200) {
+    print("Download failed.");
+    return false;
+  }
+  File(dll.path).writeAsBytesSync(response.bodyBytes);
+  return true;
 }
 
 /// Get the directory where the app is running
@@ -76,8 +95,7 @@ Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
   print("Update extracted.");
 
   // Create a batch file to replace files and restart app
-  final exeName =
-      Platform.resolvedExecutable.split(Platform.pathSeparator).last;
+  final exeName = Platform.resolvedExecutable.split(Platform.pathSeparator).last;
   final batchContent = '''
   @echo off
   set "EXE_NAME=$exeName"
@@ -108,8 +126,5 @@ Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
 }
 
 void updateApp(String batchFilePath) {
-  Process.start("cmd.exe", [
-    "/c",
-    batchFilePath,
-  ], mode: ProcessStartMode.detached);
+  Process.start("cmd.exe", ["/c", batchFilePath], mode: ProcessStartMode.detached);
 }

@@ -6,6 +6,7 @@ import 'package:ty1_mod_manager/models/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'dart:io';
 import 'package:ty1_mod_manager/services/github_service.dart';
+import 'package:ty1_mod_manager/services/update_manager_service.dart';
 
 class SettingsView extends StatefulWidget {
   @override
@@ -24,8 +25,7 @@ class _SettingsViewState extends State<SettingsView> {
 
     if (selectedDirectory != null) {
       setState(() {
-        _tyDirectoryController.text =
-            selectedDirectory; // Set the selected directory path in the text controller
+        _tyDirectoryController.text = selectedDirectory; // Set the selected directory path in the text controller
       });
     }
   }
@@ -49,6 +49,66 @@ class _SettingsViewState extends State<SettingsView> {
     }
   }
 
+  Future<void> _update() async {
+    // Show a loading indicator while updating
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing dialog by tapping outside
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(), // Show loading indicator
+        );
+      },
+    );
+
+    // Perform the update check in the background
+    bool updateSuccessful = await downloadAndUpdateTygerFramework();
+
+    Navigator.of(context, rootNavigator: true).pop();
+    if (!updateSuccessful) {
+      // Show failure dialog if the update failed
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Update Failed"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Could not update TygerFramework.\nMake sure you have a valid Ty directory path and internet connection.",
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // User chose to cancel
+                },
+                child: Text("Okay"),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    // Show a loading indicator while updating
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing dialog by tapping outside
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(), // Show loading indicator
+        );
+      },
+    );
+
+    // Proceed with additional checks after the update
+    await checkForUpdate(updateFramework: false);
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
   // Save settings when the save button is pressed
   Future<void> _saveSettings() async {
     // Show the loading dialog
@@ -59,11 +119,7 @@ class _SettingsViewState extends State<SettingsView> {
         return AlertDialog(
           content: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Processing..."),
-            ],
+            children: [CircularProgressIndicator(), SizedBox(width: 20), Text("Processing...")],
           ),
         );
       },
@@ -118,10 +174,7 @@ class _SettingsViewState extends State<SettingsView> {
             // TY Directory Section
             Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
-              child: Text(
-                "Ty Directory",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              child: Text("Ty Directory", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Row(
               children: [
@@ -138,9 +191,7 @@ class _SettingsViewState extends State<SettingsView> {
                           onPressed: _selectDirectory,
                           child: FaIcon(FontAwesomeIcons.folderOpen),
                           style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           ),
                         ),
                       ),
@@ -150,9 +201,10 @@ class _SettingsViewState extends State<SettingsView> {
               ],
             ),
             SizedBox(height: 20),
-            // Auto Update Mod Manager Switch
+
+            // Auto Update Mod Manager Switc
             SwitchListTile(
-              title: Text("Check for Updates"),
+              title: Text("Auto Update On Launch?"),
               value: _autoUpdateModManager,
               onChanged: (bool value) {
                 setState(() {
@@ -161,17 +213,29 @@ class _SettingsViewState extends State<SettingsView> {
               },
               secondary: Icon(Icons.update),
             ),
+
             SizedBox(height: 10),
 
-            TextFormField(
-              controller: _launchArgsController,
-              decoration: InputDecoration(
-                labelText: "Launch Arguments",
-                border: OutlineInputBorder(),
+            ElevatedButton(
+              onPressed: _update,
+              child: Text(
+                "Check For Updates",
+                style: TextStyle(
+                  fontFamily: 'SF Slapstick Comic', // Custom font name
+                  fontSize: 24, // Optional: Adjust the font size
+                ),
               ),
             ),
 
             SizedBox(height: 20),
+
+            TextFormField(
+              controller: _launchArgsController,
+              decoration: InputDecoration(labelText: "Launch Arguments", border: OutlineInputBorder()),
+            ),
+
+            SizedBox(height: 20),
+
             // Save Settings Button
             ElevatedButton(
               onPressed: _saveSettings,

@@ -139,7 +139,7 @@ class Mod {
     final website = modInfo['website'] ?? '';
     final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
     final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final iconUrl = modInfo['icon_url'] ?? 'help me';
+    final iconUrl = modInfo['icon_url'] ?? '';
     final iconFile = File('${modDir.path}/favico.ico');
     final patchFile = File('${modDir.path}/Patch_PC.rkv');
     final dllName = modInfo['dll_name'] ?? '';
