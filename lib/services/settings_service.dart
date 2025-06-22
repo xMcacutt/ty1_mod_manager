@@ -1,57 +1,36 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ty1_mod_manager/services/utils.dart';
+import '../models/settings.dart';
 
-class Settings {
-  String tyDirectoryPath;
-  bool updateManager;
-  String launchArgs;
-
-  Settings({
-    required this.tyDirectoryPath,
-    required this.updateManager,
-    required this.launchArgs,
-  });
-
-  // Convert Settings object to a Map (for JSON encoding)
-  Map<String, dynamic> toMap() {
-    return {
-      'tyDirectoryPath': tyDirectoryPath,
-      'updateManager': updateManager,
-      'launchArgs': launchArgs,
-    };
-  }
-
-  // Convert Map to Settings object (for decoding)
-  factory Settings.fromMap(Map<String, dynamic> map) {
-    return Settings(
-      tyDirectoryPath: map['tyDirectoryPath'] ?? '',
-      updateManager: map['updateManager'] ?? true,
-      launchArgs: map['launchArgs'] ?? '',
-    );
-  }
-
-  // Convert the Settings object to JSON string
-  String toJson() {
-    final jsonMap = toMap();
-    return jsonEncode(jsonMap);
-  }
-
-  // Convert JSON string to Settings object
-  factory Settings.fromJson(String json) {
-    final jsonMap = jsonDecode(json);
-    return Settings.fromMap(jsonMap);
+class SettingsService {
+  Future<bool> downloadAndUpdateTygerFramework(String tyDirectoryPath) async {
+    try {
+      // Placeholder: Implement actual download logic, possibly using GitHubService
+      final response = await http.get(Uri.parse('https://api.github.com/repos/example/tygerframework/releases/latest'));
+      if (response.statusCode == 200) {
+        // Simulate downloading and updating in tyDirectoryPath
+        print('Downloaded TygerFramework to $tyDirectoryPath');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Update failed: $e');
+      return false;
+    }
   }
 
   // Save settings to shared_preferences
-  Future<void> saveSettings() async {
+  Future<void> saveSettings(Settings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('settings', toJson());
+    await prefs.setString('settings', settings.toJson());
   }
 
   // Load settings from shared_preferences
-  static Future<Settings?> loadSettings() async {
+  Future<Settings?> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('settings');
     if (jsonString != null) {
@@ -59,61 +38,58 @@ class Settings {
     }
     return null; // Return null if no settings are saved yet
   }
-}
 
-Future<void> copyDirectory(Directory source, Directory destination) async {
-  // Check if the source directory exists
-  if (!await source.exists()) {
-    print('Source directory does not exist');
-    return;
+  Future<bool> isFirstRun() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isFirstRun') ?? true;
   }
 
-  // Create the destination directory if it doesn't exist
-  if (!await destination.exists()) {
-    await destination.create(recursive: true);
-  }
-
-  // List all files and directories in the source directory
-  await for (var entity in source.list(recursive: false)) {
-    if (entity is File) {
-      // Copy the files to the destination directory
-      await entity.copy('${destination.path}/${entity.uri.pathSegments.last}');
-    } else if (entity is Directory) {
-      // Recursively copy the subdirectories
-      await copyDirectory(
-        entity,
-        Directory('${destination.path}/${entity.uri.pathSegments.last}'),
-      );
+  Future<void> completeSetup({required bool autoComplete, required String? tyDirectoryPath}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstRun', false);
+    if (autoComplete && tyDirectoryPath != null) {
+      final source = Directory(tyDirectoryPath);
+      final destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger - Mod Managed");
+      await recursiveCopyDirectory(source, destination);
+      final settings = Settings(tyDirectoryPath: destination.path, launchArgs: '', updateManager: true);
+      await isValidDirectory(destination.path);
+      await saveSettings(settings);
     }
   }
-}
 
-Future<bool> isValidDirectory(String directoryPath) async {
-  final baseDirectory = Directory(directoryPath);
-  final exe = File('${baseDirectory.path}/TY.exe');
-  if (!await exe.exists()) {
-    return false;
-  }
-  final pluginDirectory = Directory("$directoryPath/Plugins");
-  if (!await pluginDirectory.exists()) {
-    pluginDirectory.create();
-  }
-  final depsDirectory = Directory("$directoryPath/Plugins/Dependencies");
-  if (!await depsDirectory.exists()) {
-    depsDirectory.create();
-  }
-  final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
-  if (!await dll.exists()) {
-    final response = await http.get(
-      Uri.parse(
-        "https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll",
-      ),
+  Future<String?> pickDirectory(BuildContext context) async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: "Select vanilla Ty install folder...",
+      lockParentWindow: true,
     );
-    if (response.statusCode != 200) {
-      print("Download failed.");
+    return result;
+  }
+
+  Future<bool> isValidDirectory(String directoryPath) async {
+    final baseDirectory = Directory(directoryPath);
+    final exe = File('${baseDirectory.path}/TY.exe');
+    if (!await exe.exists()) {
       return false;
     }
-    File(dll.path).writeAsBytesSync(response.bodyBytes);
+    final pluginDirectory = Directory("$directoryPath/Plugins");
+    if (!await pluginDirectory.exists()) {
+      pluginDirectory.create();
+    }
+    final depsDirectory = Directory("$directoryPath/Plugins/Dependencies");
+    if (!await depsDirectory.exists()) {
+      depsDirectory.create();
+    }
+    final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
+    if (!await dll.exists()) {
+      final response = await http.get(
+        Uri.parse("https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll"),
+      );
+      if (response.statusCode != 200) {
+        print("Download failed.");
+        return false;
+      }
+      File(dll.path).writeAsBytesSync(response.bodyBytes);
+    }
+    return true;
   }
-  return true;
 }

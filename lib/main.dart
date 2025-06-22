@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ty1_mod_manager/providers/code_provider.dart';
+import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
+import 'package:ty1_mod_manager/providers/mod_provider.dart';
+import 'package:ty1_mod_manager/providers/settings_provider.dart';
+import 'package:ty1_mod_manager/services/code_service.dart';
+import 'package:ty1_mod_manager/services/launcher_service.dart';
+import 'package:ty1_mod_manager/services/mod_service.dart';
+import 'package:ty1_mod_manager/services/settings_service.dart';
+import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/about_view.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import 'package:ty1_mod_manager/views/mod_directory_view.dart';
-import 'views/main_view.dart' show MainView;
+import 'package:ty1_mod_manager/views/main_view.dart';
+import 'package:ty1_mod_manager/views/settings_view.dart';
 import 'theme.dart';
-import 'views/settings_view.dart';
 
 void main() {
   initAppVersion();
-  runApp(ModManagerApp());
+  runApp(const ModManagerApp());
 }
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -19,41 +29,93 @@ class ModManagerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorObservers: [routeObserver],
-      title: 'Ty the Tasmanian Tiger - Mod Manager',
-      theme: appTheme,
-      initialRoute: '/mods',
-      onGenerateRoute: (settings) {
-        Widget page;
-        switch (settings.name) {
-          case '/mods':
-            page = MainView();
-            break;
-          case '/codes':
-            page = CodesView();
-            break;
-          case '/mod_directory':
-            page = ModDirectoryView();
-            break;
-          case '/settings':
-            page = SettingsView();
-            break;
-          case '/about':
-            page = AboutView();
-          default:
-            return null; // Prevents errors for undefined routes
-        }
+    return MultiProvider(
+      providers: [
+        Provider(create: (_) => SettingsService()),
+        Provider(create: (_) => ModService()),
+        Provider(create: (_) => CodeService()),
 
-        return PageRouteBuilder(
-          settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+        ProxyProvider<SettingsService, UpdateManagerService>(
+          update: (_, settingsService, __) => UpdateManagerService(settingsService),
+        ),
+
+        ChangeNotifierProxyProvider<CodeService, CodeProvider>(
+          create: (_) => CodeProvider(),
+          update: (_, codeService, provider) {
+            provider ??= CodeProvider();
+            provider.initialize(codeService);
+            return provider;
           },
-          transitionDuration: Duration(milliseconds: 300), // Adjust speed
-        );
-      },
+        ),
+
+        ChangeNotifierProxyProvider2<SettingsService, UpdateManagerService, SettingsProvider>(
+          create: (_) => SettingsProvider(),
+          update: (_, settingsService, updateManagerService, provider) {
+            provider ??= SettingsProvider();
+            provider.initialize(settingsService, updateManagerService);
+            return provider;
+          },
+        ),
+
+        ChangeNotifierProxyProvider2<ModService, SettingsService, ModProvider>(
+          create: (_) => ModProvider(),
+          update: (_, modService, settingsService, provider) {
+            provider ??= ModProvider();
+            provider.initialize(modService, settingsService);
+            return provider;
+          },
+        ),
+
+        ChangeNotifierProxyProvider<ModService, ModDirectoryProvider>(
+          create: (_) => ModDirectoryProvider(),
+          update: (_, modService, provider) {
+            provider ??= ModDirectoryProvider();
+            provider.initialize(modService);
+            return provider;
+          },
+        ),
+
+        ProxyProvider3<ModService, CodeProvider, SettingsProvider, LauncherService>(
+          update:
+              (_, modService, codeProvider, settingsProvider, __) =>
+                  LauncherService(modService, codeProvider, settingsProvider),
+        ),
+      ],
+      child: MaterialApp(
+        navigatorObservers: [routeObserver],
+        title: 'Ty the Tasmanian Tiger - Mod Manager',
+        theme: appTheme,
+        initialRoute: '/mods',
+        onGenerateRoute: (settings) {
+          late final Widget page;
+
+          switch (settings.name) {
+            case '/mods':
+              page = const MainView();
+              break;
+            case '/codes':
+              page = const CodesView();
+              break;
+            case '/mod_directory':
+              page = const ModDirectoryView();
+              break;
+            case '/settings':
+              page = const SettingsView();
+              break;
+            case '/about':
+              page = const AboutView();
+              break;
+            default:
+              return null;
+          }
+
+          return PageRouteBuilder(
+            settings: settings,
+            pageBuilder: (_, animation, __) => FadeTransition(opacity: animation, child: page),
+            transitionDuration: const Duration(milliseconds: 300),
+          );
+        },
+      ),
     );
   }
 }

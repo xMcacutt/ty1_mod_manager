@@ -1,28 +1,17 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:archive/archive.dart';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:ty1_mod_manager/services/mod_service.dart';
-import 'package:ty1_mod_manager/views/main_view.dart';
+import 'dependency.dart';
 
 class Mod {
   final String name;
   final String version;
   final String description;
-  final List<dynamic> dependencies;
+  final List<Dependency> dependencies;
   final List<String> conflicts;
   final String? iconUrl;
-  final File? iconFile;
-  final File? patchFile;
-  final File? dllFile;
   final String author;
   final String lastUpdated;
   final String dllName;
   final String downloadUrl;
   final String website;
-  final Directory? modDir;
 
   Mod({
     required this.name,
@@ -30,166 +19,68 @@ class Mod {
     required this.description,
     required this.dependencies,
     required this.conflicts,
-    this.iconFile,
-    this.patchFile,
-    this.dllFile,
-    required this.lastUpdated,
+    this.iconUrl,
     required this.author,
-    required this.iconUrl,
+    required this.lastUpdated,
     required this.dllName,
     required this.downloadUrl,
     required this.website,
-    this.modDir,
   });
+
+  factory Mod.fromJson(Map<String, dynamic> json) {
+    return Mod(
+      name: json['name'] ?? '',
+      version: json['version'] ?? '',
+      description: json['description'] ?? '',
+      dependencies:
+          (json['dependencies'] as List<dynamic>?)
+              ?.map((dep) => Dependency.fromJson(dep as Map<String, dynamic>))
+              .toList() ??
+          [],
+      conflicts: List<String>.from(json['conflicts'] ?? []),
+      iconUrl: json['icon_url'] as String?,
+      author: json['author'] ?? '',
+      lastUpdated: json['last_updated'] ?? '',
+      dllName: json['dll_name'] ?? '',
+      downloadUrl: json['download_url'] ?? '',
+      website: json['website'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'version': version,
+    'description': description,
+    'dependencies': dependencies.map((dep) => dep.toJson()).toList(),
+    'conflicts': conflicts,
+    'icon_url': iconUrl,
+    'author': author,
+    'last_updated': lastUpdated,
+    'dll_name': dllName,
+    'download_url': downloadUrl,
+    'website': website,
+  };
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is Mod) {
-      return other.name == name;
-    }
-    return false;
+    if (other is! Mod) return false;
+    return other.name == name && other.version == version;
   }
 
   @override
-  int get hashCode => name.hashCode;
+  int get hashCode => Object.hash(name, version);
 
-  static Mod? none() {
-    return null;
-  }
-
-  Future<bool> installDeps() async {
-    for (final dep in dependencies) {
-      final depName = dep['dep_name'];
-      final depUrl = dep['dep_url'];
-      final depVersion = dep['dep_version'];
-      if (depName == null || depUrl == null || depVersion == null) continue;
-      var depsDir = await getDepsDirectory();
-      var depDir = Directory('${depsDir.path}/$depName');
-      var depVerDir = Directory('${depsDir.path}/$depName/$depVersion');
-      if (await depVerDir.exists()) continue;
-      if (!await depDir.exists()) await depDir.create();
-      await depVerDir.create();
-      final response = await http.get(Uri.parse(depUrl));
-      if (response.statusCode != 200) {
-        print("Could not access file at url $depUrl");
-        if (await depDir.list().isEmpty) depDir.delete();
-        continue;
-      }
-      final depFilePath = "${depVerDir.path}/$depName.dll";
-      await File(depFilePath).writeAsBytes(response.bodyBytes);
-    }
-    return true;
-  }
-
-  Future<bool> createModDir(Directory modDir) async {
-    if (await modDir.exists()) {
-      var modInfoFile = File('${modDir.path}/mod_info.json');
-      final modInfoJson = await modInfoFile.readAsString();
-      final modInfo = await jsonDecode(modInfoJson);
-      var myVersion = modInfo['version'];
-      if (myVersion == null || myVersion == version) {
-        return false;
-      }
-    } else {
-      await modDir.create();
-    }
-    return true;
-  }
-
-  Future<bool> install() async {
-    var modsDir = await getModsDirectory();
-    var modDir = Directory('${modsDir.path}/$name');
-    if (!await createModDir(modDir)) return false;
-    final response = await http.get(Uri.parse(downloadUrl));
-    if (response.statusCode != 200) {
-      print("Could not access file at url $downloadUrl");
-      if (await modDir.list().isEmpty) modDir.delete();
-      return false;
-    }
-    final tempDir = await getTemporaryDirectory();
-    final zipFilePath = "${tempDir.path}/$name.zip";
-    await File(zipFilePath).writeAsBytes(response.bodyBytes);
-    final bytes = await File(zipFilePath).readAsBytes();
-    final archive = ZipDecoder().decodeBytes(bytes);
-    for (final file in archive) {
-      final filePath = "${modDir.path}/${file.name}";
-      if (file.isFile) {
-        await File(filePath).create(recursive: true);
-        await File(filePath).writeAsBytes(file.content as List<int>);
-      } else {
-        await Directory(filePath).create(recursive: true);
-      }
-    }
-    await installDeps();
-    return true;
-  }
-
-  // Factory method to create a Mod instance from mod_info.json and other files
-  static Future<Mod> fromDirectory(Directory modDir) async {
-    final modInfoFile = File('${modDir.path}/mod_info.json');
-    final modInfoJson = await modInfoFile.readAsString();
-    final modInfo = await jsonDecode(modInfoJson);
-
-    final version = modInfo['version'] ?? '';
-    final name = modInfo['name'] ?? '';
-    final author = modInfo['author'] ?? '';
-    final lastUpdated = modInfo['last_updated'] ?? '';
-    final description = modInfo['description'] ?? '';
-    final website = modInfo['website'] ?? '';
-    final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
-    final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final iconUrl = modInfo['icon_url'] ?? '';
-    final iconFile = File('${modDir.path}/favico.ico');
-    final patchFile = File('${modDir.path}/Patch_PC.rkv');
-    final dllName = modInfo['dll_name'] ?? '';
-    final dllFile = File('${modDir.path}/$dllName.dll');
-    final downloadUrl = modInfo['download_url'] ?? '';
-
-    return Mod(
-      name: name,
-      version: version,
-      description: description,
-      dependencies: dependencies,
-      conflicts: conflicts,
-      iconFile: iconFile,
-      dllFile: dllFile,
-      patchFile: patchFile,
-      author: author,
-      lastUpdated: lastUpdated,
-      iconUrl: iconUrl,
-      dllName: dllName,
-      downloadUrl: downloadUrl,
-      website: website,
-      modDir: modDir,
-    );
-  }
-
-  static Mod fromJson(dynamic modInfo) {
-    final version = modInfo['version'] ?? '';
-    final name = modInfo['name'] ?? '';
-    final author = modInfo['author'] ?? '';
-    final lastUpdated = modInfo['last_updated'] ?? '';
-    final description = modInfo['description'] ?? '';
-    final website = modInfo['website'] ?? '';
-    final dependencies = List<dynamic>.from(modInfo['dependencies'] ?? []);
-    final conflicts = List<String>.from(modInfo['conflicts'] ?? []);
-    final iconUrl = modInfo['icon_url'] ?? '';
-    final dllName = modInfo['dll_name'] ?? '';
-    final downloadUrl = modInfo['download_url'] ?? '';
-
-    return Mod(
-      version: version,
-      name: name,
-      author: author,
-      lastUpdated: lastUpdated,
-      description: description,
-      dependencies: dependencies,
-      conflicts: conflicts,
-      iconUrl: iconUrl,
-      dllName: dllName,
-      downloadUrl: downloadUrl,
-      website: website,
-    );
-  }
+  static Mod get none => Mod(
+    name: '',
+    version: '',
+    description: '',
+    dependencies: [],
+    conflicts: [],
+    author: '',
+    lastUpdated: '',
+    dllName: '',
+    downloadUrl: '',
+    website: '',
+  );
 }

@@ -12,13 +12,7 @@ typedef VirtualProtectExC =
     );
 
 typedef VirtualProtectExDart =
-    int Function(
-      int hProcess,
-      Pointer lpAddress,
-      int dwSize,
-      int flNewProtect,
-      Pointer<Uint32> lpflOldProtect,
-    );
+    int Function(int hProcess, Pointer lpAddress, int dwSize, int flNewProtect, Pointer<Uint32> lpflOldProtect);
 
 class MemoryEditor {
   static DynamicLibrary? kernel32;
@@ -51,18 +45,11 @@ class MemoryEditor {
   }
 
   static void virtualProtect(Pointer<Uint32> addr, int numBytes) {
-    final VirtualProtectExDart VirtualProtectEx = kernel32!
-        .lookupFunction<VirtualProtectExC, VirtualProtectExDart>(
-          'VirtualProtectEx',
-        );
-    final oldProtection = calloc<Uint32>();
-    VirtualProtectEx(
-      hProcess,
-      addr,
-      numBytes,
-      PAGE_EXECUTE_READWRITE,
-      oldProtection,
+    final VirtualProtectExDart VirtualProtectEx = kernel32!.lookupFunction<VirtualProtectExC, VirtualProtectExDart>(
+      'VirtualProtectEx',
     );
+    final oldProtection = calloc<Uint32>();
+    VirtualProtectEx(hProcess, addr, numBytes, PAGE_EXECUTE_READWRITE, oldProtection);
     calloc.free(oldProtection);
   }
 

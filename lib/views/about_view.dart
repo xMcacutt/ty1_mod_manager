@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/models/mm_app_bar.dart';
+import 'package:ty1_mod_manager/views/mm_app_bar.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -29,20 +29,12 @@ class AboutView extends StatelessWidget {
               children: [
                 Text(
                   'Version ${getAppVersion()}',
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: AppColors.altText,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 28, color: AppColors.altText, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   'About',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -65,11 +57,7 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Text(
                   'Support',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 8),
                 InkWell(
@@ -85,11 +73,7 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Text(
                   'Adding Mods',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -112,18 +96,12 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Text(
                   'Bugs',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: () {
-                    final url = Uri.parse(
-                      'https://github.com/xMcacutt/ty1_mod_manager/issues',
-                    );
+                    final url = Uri.parse('https://github.com/xMcacutt/ty1_mod_manager/issues');
                     _launchURL(url);
                   },
                   child: const Text(
@@ -134,11 +112,7 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Text(
                   'Author',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Slapstick Comic',
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'SF Slapstick Comic'),
                 ),
                 const SizedBox(height: 8),
                 const Text(

@@ -2,11 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-Future<bool> download(
-  BuildContext context,
-  String fileUrl,
-  String savePath,
-) async {
+Future<bool> download(BuildContext context, String fileUrl, String savePath) async {
   try {
     // Send a GET request to fetch the file
     final response = await http.get(Uri.parse(fileUrl));
@@ -17,10 +13,7 @@ Future<bool> download(
       await file.writeAsBytes(response.bodyBytes);
       return true;
     } else {
-      _showErrorDialog(
-        context,
-        'Failed to download file. Status code: ${response.statusCode}',
-      );
+      _showErrorDialog(context, 'Failed to download file. Status code: ${response.statusCode}');
       return false;
     }
   } catch (e) {
