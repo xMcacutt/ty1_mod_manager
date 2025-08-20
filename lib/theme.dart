@@ -39,18 +39,12 @@ ThemeData appTheme = ThemeData(
     bodySmall: TextStyle(color: AppColors.specialBack, fontSize: 12),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ButtonStyle(
-      backgroundColor: WidgetStateProperty.all(AppColors.altBack),
-    ),
+    style: ButtonStyle(backgroundColor: WidgetStateProperty.all(AppColors.altBack)),
   ),
   dialogTheme: DialogThemeData(backgroundColor: AppColors.altBack),
   sliderTheme: SliderThemeData(
     valueIndicatorShape: PaddleSliderValueIndicatorShape(),
     valueIndicatorColor: AppColors.mainAccentOn,
-    valueIndicatorTextStyle: TextStyle(
-      color: AppColors.mainText,
-      fontFamily: 'Komika_Hands',
-      fontSize: 18,
-    ),
+    valueIndicatorTextStyle: TextStyle(color: AppColors.mainText, fontFamily: 'Komika_Hands', fontSize: 18),
   ),
 );

@@ -11,15 +11,20 @@ import 'package:win32/win32.dart';
 import '../models/code.dart';
 
 class CodeService {
-  Future<List<Code>> loadCodeData() async {
+  Future<List<Code>> loadCodeData(String game) async {
     late String codeJson;
+
+    final Map<String, String> codeFiles = {'Ty 1': 'codes.json', 'Ty 2': 'codes Ty2.json', 'Ty 3': 'codes Ty3.json'};
+
+    final fileName = codeFiles[game] ?? 'codes.json';
+
     final response = await http.get(
       Uri.parse(
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/resource/codes.json?${DateTime.now().millisecondsSinceEpoch}",
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/resource/$fileName?${DateTime.now().millisecondsSinceEpoch}",
       ),
     );
     if (response.statusCode != 200) {
-      codeJson = await rootBundle.loadString('resource/codes.json');
+      codeJson = await rootBundle.loadString('resource/$fileName');
       print("Download failed.");
     } else {
       codeJson = response.body;

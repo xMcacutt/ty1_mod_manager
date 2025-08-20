@@ -98,12 +98,15 @@ flutter:
         - asset: fonts/KOMIKAHB.ttf
 
   assets:
-    - resource/a4_env.png
     - resource/unknown.ico
     - resource/codes.json
-    - resource/env_c4.png
+    - resource/Ty1_Env.png
+    - resource/Ty2_Env.png
+    - resource/Ty3_Env.png
     - resource/fe_041.png
-
+    - resource/Ty1.ico
+    - resource/Ty2.ico
+    - resource/Ty3.ico
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

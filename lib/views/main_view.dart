@@ -9,6 +9,7 @@ import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/views/mm_app_bar.dart';
 import 'package:ty1_mod_manager/views/mod_listing.dart';
 import 'package:ty1_mod_manager/services/launcher_service.dart';
+import 'package:ty1_mod_manager/views/mv_bottom_app_bar.dart';
 
 import '../main.dart';
 
@@ -50,7 +51,8 @@ class _MainViewState extends State<MainView> with RouteAware {
   @override
   void didPopNext() {
     super.didPopNext();
-    Provider.of<ModProvider>(context, listen: false).loadMods();
+    var modProvider = Provider.of<ModProvider>(context, listen: false);
+    modProvider.loadMods();
   }
 
   @override
@@ -77,59 +79,6 @@ class _MainViewState extends State<MainView> with RouteAware {
                   );
                 },
               ),
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: ElevatedButton(
-                onPressed: () => launcherService.launchGame(context, modProvider.selectedMods),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(5),
-                      child: Text("Launch Game", style: TextStyle(fontFamily: 'SF Slapstick Comic', fontSize: 24)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final result = await settingsService.pickDirectory(context);
-                  if (result != null) {
-                    await modProvider.completeSetup(autoComplete: true, tyDirectoryPath: result);
-                    await modProvider.loadMods();
-                  } else {
-                    await showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("No Directory Selected"),
-                          content: Text("Please select a valid directory."),
-                          actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Ok"))],
-                        );
-                      },
-                    );
-                  }
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(5),
-                      child: Text("Add Custom", style: TextStyle(fontFamily: 'SF Slapstick Comic', fontSize: 24)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           if (modProvider.isFirstRun)
             AlertDialog(
               title: Text('Welcome!'),
@@ -201,6 +150,7 @@ class _MainViewState extends State<MainView> with RouteAware {
           ],
         ),
       ),
+      bottomNavigationBar: buildBottomNavBar(context, modProvider, launcherService, settingsService),
     );
   }
 }

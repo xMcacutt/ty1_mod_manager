@@ -16,7 +16,7 @@ class LauncherService {
 
   LauncherService(this.modService, this.codeProvider, this.settingsProvider);
 
-  Future<void> launchGame(BuildContext context, List<Mod> selectedMods) async {
+  Future<void> launchGame(BuildContext context, List<Mod> selectedMods, {String? selectedGame}) async {
     var settings = await settingsProvider.loadSettings();
     if (settings == null) {
       await showErrorBox(context, "Settings could not be loaded.");

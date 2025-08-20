@@ -12,6 +12,7 @@ class Mod {
   final String dllName;
   final String downloadUrl;
   final String website;
+  final List<String> games;
 
   Mod({
     required this.name,
@@ -25,6 +26,7 @@ class Mod {
     required this.dllName,
     required this.downloadUrl,
     required this.website,
+    required this.games,
   });
 
   factory Mod.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Mod {
       dllName: json['dll_name'] ?? '',
       downloadUrl: json['download_url'] ?? '',
       website: json['website'] ?? '',
+      games: json['games'] ?? ['Ty 1'],
     );
   }
 
@@ -59,6 +62,7 @@ class Mod {
     'dll_name': dllName,
     'download_url': downloadUrl,
     'website': website,
+    'games': games,
   };
 
   @override
@@ -82,5 +86,6 @@ class Mod {
     dllName: '',
     downloadUrl: '',
     website: '',
+    games: [],
   );
 }

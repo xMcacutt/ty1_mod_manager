@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:ty1_mod_manager/models/mod.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/services/mod_service.dart';
 
 class ModDirectoryProvider with ChangeNotifier {
   late ModService _modService;
+  late GameProvider _gameProvider;
 
-  void initialize(ModService modService) {
+  void initialize(ModService modService, GameProvider gameProvider) {
     _modService = modService;
+    _gameProvider = gameProvider;
+    loadModData();
   }
 
   List<Mod> _allMods = [];
@@ -25,8 +29,8 @@ class ModDirectoryProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final remoteMods = await _modService.fetchRemoteMods();
-    final localMods = await _modService.loadMods();
+    final remoteMods = await _modService.fetchRemoteMods(_gameProvider.selectedGame);
+    final localMods = await _modService.loadMods(_gameProvider.selectedGame);
 
     _installedMods =
         remoteMods.where((remoteMod) {
@@ -44,6 +48,7 @@ class ModDirectoryProvider with ChangeNotifier {
                   conflicts: [],
                   downloadUrl: '',
                   website: '',
+                  games: [],
                 ),
           );
           return localMod.name.isNotEmpty && _modService.compareVersions(localMod.version, remoteMod.version) != -1;
@@ -65,6 +70,7 @@ class ModDirectoryProvider with ChangeNotifier {
                   conflicts: [],
                   downloadUrl: '',
                   website: '',
+                  games: [],
                 ),
           );
           return localMod.name.isEmpty || _modService.compareVersions(localMod.version, remoteMod.version) != 1;
@@ -83,8 +89,7 @@ class ModDirectoryProvider with ChangeNotifier {
     await _modService.install(mod);
     _modsInstalling.remove(mod.name);
 
-    // Reload installed mods to reflect the new installation
-    final localMods = await _modService.loadMods();
+    final localMods = await _modService.loadMods(_gameProvider.selectedGame);
     _installedMods =
         _allMods.where((remoteMod) {
           final localMod = localMods.firstWhere(
@@ -101,6 +106,7 @@ class ModDirectoryProvider with ChangeNotifier {
                   conflicts: [],
                   downloadUrl: '',
                   website: '',
+                  games: [],
                 ),
           );
           return localMod.name.isNotEmpty && _modService.compareVersions(localMod.version, remoteMod.version) != -1;

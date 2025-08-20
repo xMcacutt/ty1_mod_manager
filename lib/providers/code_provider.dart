@@ -15,10 +15,10 @@ class CodeProvider with ChangeNotifier {
   List<Code> get codes => _codes;
   bool get isLoading => _isLoading;
 
-  Future<void> loadCodes() async {
+  Future<void> loadCodes(String game) async {
     _isLoading = true;
     notifyListeners();
-    _codes = await _codeService.loadCodeData();
+    _codes = await _codeService.loadCodeData(game);
     _isLoading = false;
     notifyListeners();
   }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
+import 'package:ty1_mod_manager/providers/mod_provider.dart';
 
 import '../models/mod.dart';
 import '../services/mod_service.dart' as modService;
@@ -37,12 +40,16 @@ class _ModListing extends State<ModListing> {
           future: _iconFileFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            } else if (snapshot.hasError || snapshot.data == null) {
-              return Image.asset('resource/unknown.ico');
-            } else {
-              return Image.file(snapshot.data!);
+              return SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
             }
+            if (snapshot.hasError) {
+              print("Error loading icon: ${snapshot.error}");
+              return Image.asset('resource/unknown.ico', width: 40, height: 40);
+            }
+            if (snapshot.data == null) {
+              return Image.asset('resource/unknown.ico', width: 40, height: 40);
+            }
+            return Image.file(snapshot.data!, width: 40, height: 40);
           },
         ),
         title: Text(widget.mod.name),
@@ -104,13 +111,9 @@ class _ModListing extends State<ModListing> {
         }
         break;
       case 'uninstall':
-        await modServiceInstance.uninstallMod(widget.mod);
-        if (mounted) {
-          setState(() {});
-        }
-        if (context.findAncestorStateOfType<State<StatefulWidget>>() != null) {
-          context.findAncestorStateOfType<State<StatefulWidget>>()!.setState(() {});
-        }
+        final modProvider = context.read<ModProvider>();
+        final dirProvider = context.read<ModDirectoryProvider>();
+        await modProvider.uninstallMod(widget.mod, dirProvider: dirProvider);
         break;
     }
   }

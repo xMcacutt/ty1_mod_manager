@@ -25,16 +25,34 @@ class ModService {
   }
 
   Future<File?> getModIconFile(Mod mod) async {
-    final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
-    final iconFile = File('${modDir.path}/favico.ico');
-    return await iconFile.exists() ? iconFile : null;
+    try {
+      final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
+      final iconFile = File('${modDir.path}/favico.ico');
+      if (await iconFile.exists()) {
+        return iconFile;
+      }
+      if (mod.iconUrl != null && mod.iconUrl!.isNotEmpty) {
+        final response = await http.get(Uri.parse(mod.iconUrl!));
+        if (response.statusCode == 200) {
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File('${tempDir.path}/${mod.name}_icon.ico');
+          await tempFile.writeAsBytes(response.bodyBytes);
+          return tempFile;
+        }
+      }
+    } catch (e) {
+      print("Error fetching icon: $e");
+    }
+    return null;
   }
 
-  Future<void> uninstallMod(Mod mod) async {
+  Future<bool> uninstallMod(Mod mod) async {
     final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
     if (await modDir.exists()) {
       await modDir.delete(recursive: true);
+      return true;
     }
+    return false;
   }
 
   Future<void> prepareGameDirectory(String tyDirectoryPath) async {
@@ -175,7 +193,7 @@ class ModService {
     return depsDirectory;
   }
 
-  Future<List<Mod>> loadMods() async {
+  Future<List<Mod>> loadMods(String game) async {
     final modsDir = await getModsDirectory();
     if (!modsDir.existsSync()) {
       return [];
@@ -186,7 +204,9 @@ class ModService {
     final mods = <Mod>[];
     for (var modDir in modDirs) {
       final mod = await fromDirectory(modDir);
-      mods.add(mod);
+      if (mod.games.contains(game)) {
+        mods.add(mod);
+      }
     }
 
     return mods;
@@ -251,7 +271,7 @@ class ModService {
     return 0; // versions are the same
   }
 
-  Future<List<Mod>> fetchRemoteMods() async {
+  Future<List<Mod>> fetchRemoteMods(String game) async {
     final modDirectoryJsonUrl =
         "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/mod_directory.json?${DateTime.now().millisecondsSinceEpoch}";
     final response = await http.get(Uri.parse(modDirectoryJsonUrl));
@@ -267,7 +287,10 @@ class ModService {
       final modInfoUrl = "${modListing['mod_info_url']}?${DateTime.now().millisecondsSinceEpoch}";
       final modResponse = await http.get(Uri.parse(modInfoUrl));
       if (modResponse.statusCode == 200) {
-        remoteMods.add(Mod.fromJson(jsonDecode(modResponse.body)));
+        var mod = Mod.fromJson(jsonDecode(modResponse.body));
+        if (mod.games.contains(game)) {
+          remoteMods.add(mod);
+        }
       } else {
         print("Failed to fetch mod info: $modInfoUrl");
       }

@@ -56,6 +56,7 @@ class ModDirectoryView extends StatelessWidget {
                                 conflicts: [],
                                 downloadUrl: '',
                                 website: '',
+                                games: [],
                               ),
                         );
                         return ModDirectoryListing(
@@ -126,6 +127,7 @@ class ModSearchDelegate extends SearchDelegate {
                 conflicts: [],
                 downloadUrl: '',
                 website: '',
+                games: [],
               ),
         );
         return ModDirectoryListing(

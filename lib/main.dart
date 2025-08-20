@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ty1_mod_manager/providers/code_provider.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
 import 'package:ty1_mod_manager/providers/mod_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';
@@ -48,6 +49,15 @@ class ModManagerApp extends StatelessWidget {
           },
         ),
 
+        ChangeNotifierProxyProvider<CodeProvider, GameProvider>(
+          create: (_) => GameProvider(null),
+          update: (_, codeProvider, gameProvider) {
+            gameProvider ??= GameProvider(codeProvider);
+            gameProvider.setCodeProvider(codeProvider);
+            return gameProvider;
+          },
+        ),
+
         ChangeNotifierProxyProvider2<SettingsService, UpdateManagerService, SettingsProvider>(
           create: (_) => SettingsProvider(),
           update: (_, settingsService, updateManagerService, provider) {
@@ -57,20 +67,20 @@ class ModManagerApp extends StatelessWidget {
           },
         ),
 
-        ChangeNotifierProxyProvider2<ModService, SettingsService, ModProvider>(
+        ChangeNotifierProxyProvider3<ModService, SettingsService, GameProvider, ModProvider>(
           create: (_) => ModProvider(),
-          update: (_, modService, settingsService, provider) {
+          update: (_, modService, settingsService, gameProvider, provider) {
             provider ??= ModProvider();
-            provider.initialize(modService, settingsService);
+            provider.initialize(modService, settingsService, gameProvider);
             return provider;
           },
         ),
 
-        ChangeNotifierProxyProvider<ModService, ModDirectoryProvider>(
+        ChangeNotifierProxyProvider2<ModService, GameProvider, ModDirectoryProvider>(
           create: (_) => ModDirectoryProvider(),
-          update: (_, modService, provider) {
+          update: (_, modService, gameProvider, provider) {
             provider ??= ModDirectoryProvider();
-            provider.initialize(modService);
+            provider.initialize(modService, gameProvider);
             return provider;
           },
         ),
