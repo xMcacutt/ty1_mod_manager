@@ -6,24 +6,22 @@ import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
 import 'package:ty1_mod_manager/providers/mod_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';
 import 'package:ty1_mod_manager/services/code_service.dart';
+import 'package:ty1_mod_manager/services/dialog_service.dart';
 import 'package:ty1_mod_manager/services/launcher_service.dart';
 import 'package:ty1_mod_manager/services/mod_service.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
-import 'package:ty1_mod_manager/views/about_view.dart';
-import 'package:ty1_mod_manager/views/codes_view.dart';
-import 'package:ty1_mod_manager/views/mod_directory_view.dart';
 import 'package:ty1_mod_manager/views/main_view.dart';
-import 'package:ty1_mod_manager/views/settings_view.dart';
 import 'theme.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final dialogService = DialogService(navigatorKey);
 
 void main() {
   initAppVersion();
   runApp(const ModManagerApp());
 }
-
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 class ModManagerApp extends StatelessWidget {
   const ModManagerApp({super.key});
@@ -36,10 +34,6 @@ class ModManagerApp extends StatelessWidget {
         Provider(create: (_) => ModService()),
         Provider(create: (_) => CodeService()),
 
-        ProxyProvider<SettingsService, UpdateManagerService>(
-          update: (_, settingsService, __) => UpdateManagerService(settingsService),
-        ),
-
         ChangeNotifierProxyProvider<CodeService, CodeProvider>(
           create: (_) => CodeProvider(),
           update: (_, codeService, provider) {
@@ -49,31 +43,14 @@ class ModManagerApp extends StatelessWidget {
           },
         ),
 
-        ChangeNotifierProxyProvider<CodeProvider, GameProvider>(
-          create: (_) => GameProvider(null),
-          update: (_, codeProvider, gameProvider) {
-            gameProvider ??= GameProvider(codeProvider);
-            gameProvider.setCodeProvider(codeProvider);
-            return gameProvider;
-          },
-        ),
+        ChangeNotifierProvider<GameProvider>(create: (_) => GameProvider(null)),
 
-        ChangeNotifierProxyProvider2<SettingsService, UpdateManagerService, SettingsProvider>(
-          create: (_) => SettingsProvider(),
-          update: (_, settingsService, updateManagerService, provider) {
-            provider ??= SettingsProvider();
-            provider.initialize(settingsService, updateManagerService);
-            return provider;
-          },
-        ),
+        ChangeNotifierProvider<SettingsProvider>(create: (_) => SettingsProvider()),
 
-        ChangeNotifierProxyProvider3<ModService, SettingsService, GameProvider, ModProvider>(
-          create: (_) => ModProvider(),
-          update: (_, modService, settingsService, gameProvider, provider) {
-            provider ??= ModProvider();
-            provider.initialize(modService, settingsService, gameProvider);
-            return provider;
-          },
+        ChangeNotifierProvider<ModProvider>(create: (_) => ModProvider()),
+
+        ProxyProvider2<SettingsService, GameProvider, UpdateManagerService>(
+          update: (_, settingsService, gameProvider, __) => UpdateManagerService(settingsService, gameProvider),
         ),
 
         ChangeNotifierProxyProvider2<ModService, GameProvider, ModDirectoryProvider>(
@@ -88,41 +65,29 @@ class ModManagerApp extends StatelessWidget {
         ProxyProvider3<ModService, CodeProvider, SettingsProvider, LauncherService>(
           update:
               (_, modService, codeProvider, settingsProvider, __) =>
-                  LauncherService(modService, codeProvider, settingsProvider),
+                  LauncherService(modService, codeProvider, settingsProvider, dialogService),
         ),
       ],
-      child: MaterialApp(
-        navigatorObservers: [routeObserver],
-        title: 'Ty the Tasmanian Tiger - Mod Manager',
-        theme: appTheme,
-        initialRoute: '/mods',
-        onGenerateRoute: (settings) {
-          late final Widget page;
+      child: Builder(
+        builder: (context) {
+          final gameProvider = context.read<GameProvider>();
+          final codeProvider = context.read<CodeProvider>();
+          final settingsProvider = context.read<SettingsProvider>();
+          final modProvider = context.read<ModProvider>();
 
-          switch (settings.name) {
-            case '/mods':
-              page = const MainView();
-              break;
-            case '/codes':
-              page = const CodesView();
-              break;
-            case '/mod_directory':
-              page = const ModDirectoryView();
-              break;
-            case '/settings':
-              page = const SettingsView();
-              break;
-            case '/about':
-              page = const AboutView();
-              break;
-            default:
-              return null;
-          }
+          gameProvider.setCodeProvider(codeProvider, settingsProvider, modProvider);
+          settingsProvider.initialize(
+            context.read<SettingsService>(),
+            context.read<UpdateManagerService>(),
+            gameProvider,
+          );
+          modProvider.initialize(context.read<ModService>(), context.read<SettingsService>(), gameProvider);
 
-          return PageRouteBuilder(
-            settings: settings,
-            pageBuilder: (_, animation, __) => FadeTransition(opacity: animation, child: page),
-            transitionDuration: const Duration(milliseconds: 300),
+          return MaterialApp(
+            title: 'Ty the Tasmanian Tiger - Mod Manager',
+            theme: appTheme,
+            home: const RootView(),
+            navigatorKey: navigatorKey,
           );
         },
       ),

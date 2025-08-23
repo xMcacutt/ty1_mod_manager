@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:ty1_mod_manager/main.dart';
 import '../providers/settings_provider.dart';
-import '../views/mm_app_bar.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -10,9 +10,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-
     return Scaffold(
-      appBar: MMAppBar(title: "Settings"),
       body: Stack(
         children: [
           Padding(
@@ -62,18 +60,9 @@ class SettingsView extends StatelessWidget {
                           : () async {
                             final success = await settingsProvider.checkForUpdates(context);
                             if (!success) {
-                              await showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text("Update Failed"),
-                                      content: Text(
-                                        "Could not update TygerFramework.\nMake sure you have a valid Ty directory path and internet connection.",
-                                      ),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Okay")),
-                                      ],
-                                    ),
+                              await dialogService.showError(
+                                "Update Failed",
+                                "Could not update TygerFramework.\nMake sure you have a valid Ty directory path and internet connection.",
                               );
                             }
                           },
@@ -93,14 +82,9 @@ class SettingsView extends StatelessWidget {
                           : () async {
                             final success = await settingsProvider.saveSettings(context);
                             if (success) {
-                              await showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text('Settings Saved'),
-                                      content: Text('Your settings have been saved successfully!'),
-                                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
-                                    ),
+                              await dialogService.showInfo(
+                                'Settings Saved',
+                                'Your settings have been saved successfully!',
                               );
                             }
                           },

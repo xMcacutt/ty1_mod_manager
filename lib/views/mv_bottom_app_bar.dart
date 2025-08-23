@@ -1,75 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/mod_provider.dart';
+import 'package:ty1_mod_manager/providers/settings_provider.dart';
 import 'package:ty1_mod_manager/services/launcher_service.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 import 'package:ty1_mod_manager/theme.dart';
 
-Widget buildBottomNavBar(
-  BuildContext context,
-  ModProvider modProvider,
-  LauncherService launcherService,
-  SettingsService settingsService,
-) {
-  return BottomAppBar(
-    color: AppColors.mainBack,
-    child: Container(
-      height: 70,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStyledButton(
-            context: context,
-            label: 'Add Custom',
-            icon: Icons.folder_open_rounded,
-            onPressed: () async {
-              final result = await settingsService.pickDirectory(context);
-              if (result != null) {
-                await modProvider.completeSetup(autoComplete: true, tyDirectoryPath: result);
-                await modProvider.loadMods();
-              } else {
-                await showDialog(
+class BottomNavBar extends StatefulWidget {
+  final ModProvider modProvider;
+  final SettingsProvider settingsProvider;
+  final LauncherService launcherService;
+  final SettingsService settingsService;
+
+  const BottomNavBar({
+    super.key,
+    required this.modProvider,
+    required this.settingsProvider,
+    required this.launcherService,
+    required this.settingsService,
+  });
+
+  @override
+  State<BottomNavBar> createState() => _BottomNavBarState();
+}
+
+class _BottomNavBarState extends State<BottomNavBar> {
+  late MenuController _menuController;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuController = MenuController();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomAppBar(
+      color: AppColors.mainBack,
+      child: Container(
+        height: 70,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Consumer<GameProvider>(
+              builder: (context, value, child) {
+                return _buildStyledButton(
                   context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text("No Directory Selected"),
-                      content: const Text("Please select a valid directory."),
-                      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Ok"))],
-                    );
+                  label: 'Add Custom',
+                  icon: Icons.folder_open_rounded,
+                  onPressed: () async {
+                    final result = await widget.settingsService.pickDirectory();
+                    if (result != null) {
+                      await widget.settingsService.completeSetup(
+                        game: value.selectedGame,
+                        autoComplete: true,
+                        tyDirectoryPath: result,
+                      );
+                      await widget.modProvider.loadMods();
+                    } else {
+                      await dialogService.showError("No Directory Selected", "Please select a valid directory.");
+                    }
                   },
                 );
-              }
-            },
-          ),
-          Consumer<GameProvider>(
-            builder: (context, gameProvider, child) {
-              return _buildStyledDropdown(
-                value: gameProvider.selectedGame,
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    final gameId = newValue;
-                    gameProvider.setGame(gameId);
-                    modProvider.loadMods();
-                  }
-                },
-              );
-            },
-          ),
-          _buildStyledButton(
-            context: context,
-            label: 'Launch Game',
-            icon: Icons.play_arrow_rounded,
-            onPressed: () {
-              final gameProvider = Provider.of<GameProvider>(context, listen: false);
-              final selectedGameLabel = gameProvider.selectedGame;
-              launcherService.launchGame(context, modProvider.selectedMods, selectedGame: selectedGameLabel);
-            },
-          ),
-        ],
+              },
+            ),
+
+            Consumer<GameProvider>(
+              builder: (context, gameProvider, child) {
+                return _buildStyledDropdown(
+                  value: gameProvider.selectedGame,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      gameProvider.setGame(newValue);
+                    }
+                  },
+                  controller: _menuController,
+                );
+              },
+            ),
+            _buildStyledButton(
+              context: context,
+              label: 'Launch Game',
+              icon: Icons.play_arrow_rounded,
+              onPressed: () {
+                final selectedGameLabel = Provider.of<GameProvider>(context, listen: false).selectedGame;
+                widget.launcherService.launchGame(widget.modProvider.selectedMods, selectedGameLabel);
+              },
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 Widget _buildStyledButton({
@@ -92,13 +116,17 @@ Widget _buildStyledButton({
   );
 }
 
-Widget _buildStyledDropdown({required String value, required ValueChanged<String?> onChanged}) {
+Widget _buildStyledDropdown({
+  required String value,
+  required ValueChanged<String?> onChanged,
+  required MenuController controller,
+}) {
   final options = [
     {'label': 'Ty 1', 'icon': 'resource/Ty1.ico'},
     {'label': 'Ty 2', 'icon': 'resource/Ty2.ico'},
     {'label': 'Ty 3', 'icon': 'resource/Ty3.ico'},
   ];
-  final controller = MenuController();
+
   final menuChildren =
       options.asMap().entries.map<Widget>((entry) {
         final index = entry.key;
@@ -107,10 +135,11 @@ Widget _buildStyledDropdown({required String value, required ValueChanged<String
           children: [
             MenuItemButton(
               style: ButtonStyle(
-                padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
               ),
               onPressed: () {
                 onChanged(option['label'] as String);
+                controller.close();
               },
               child: Row(
                 children: [
@@ -146,7 +175,7 @@ Widget _buildStyledDropdown({required String value, required ValueChanged<String
           children: [
             Expanded(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center, // centers inside Expanded
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(options.firstWhere((o) => o['label'] == value)['icon'] as String, width: 32, height: 32),
                   const SizedBox(width: 8),

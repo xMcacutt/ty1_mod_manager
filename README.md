@@ -41,6 +41,7 @@ Below is a list of the fields which should be defined in the json.
 | `icon_url`     | A link to a `.ico` file. It is recommended that the ico file uploaded as part of the mod's git repo. The raw github link should be used to avoid unnecessary api calls. If no icon is provided, the mod will show up with a question mark icon. | No        |
 | `last_updated` | The date of last update. This should be kept in YYYY-MM-DD format. Please stick to this format and update with the mod                                                                                                                          | Yes       |
 | `website`      | A web url which can be accessed from the right click context menu in `my mods`. Readme link usually goes here                                                                                                                                   | No        |
+| `games`        | A list of games 'Ty 1', 'Ty 2', or 'Ty 3' which defaults to Ty 1 when left ommitted                                                                                                                                                             | No        |
 
 #### Dependencies
 

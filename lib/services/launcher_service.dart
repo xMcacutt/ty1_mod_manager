@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:ty1_mod_manager/providers/code_provider.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';
-import 'package:ty1_mod_manager/services/code_service.dart';
+import 'package:ty1_mod_manager/services/dialog_service.dart';
 import 'package:ty1_mod_manager/services/ffi_win32.dart';
 import 'dart:io';
 
@@ -13,42 +13,28 @@ class LauncherService {
   final ModService modService;
   final CodeProvider codeProvider;
   final SettingsProvider settingsProvider;
+  final DialogService dialogService;
 
-  LauncherService(this.modService, this.codeProvider, this.settingsProvider);
+  LauncherService(this.modService, this.codeProvider, this.settingsProvider, this.dialogService);
 
-  Future<void> launchGame(BuildContext context, List<Mod> selectedMods, {String? selectedGame}) async {
+  Future<void> launchGame(List<Mod> selectedMods, String selectedGame) async {
     var settings = await settingsProvider.loadSettings();
     if (settings == null) {
-      await showErrorBox(context, "Settings could not be loaded.");
+      await dialogService.showError("Error", "Settings could not be loaded.");
       return;
     }
 
     final conflicts = await modService.findConflicts(selectedMods);
-    final conflictMessages = conflicts.join("\n");
-
-    bool shouldLaunch = true;
     if (conflicts.isNotEmpty) {
-      shouldLaunch =
-          await showDialog<bool>(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: Text("Conflicts Detected"),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [Text("The following conflicts were found:"), SizedBox(height: 10), Text(conflictMessages)],
-                ),
-                actions: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text("Cancel")),
-                  TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text("Launch Anyway")),
-                ],
-              );
-            },
-          ) ??
-          false;
-    }
+      final shouldLaunch = await dialogService.showConfirmation(
+        "Conflicts Detected",
+        "The following conflicts were found:\n\n${conflicts.join("\n")}",
+        confirmText: "Launch Anyway",
+        cancelText: "Cancel",
+      );
 
-    if (!shouldLaunch) return;
+      if (!shouldLaunch) return;
+    }
 
     await modService.prepareGameDirectory(settings.tyDirectoryPath);
 
@@ -74,7 +60,7 @@ class LauncherService {
     final argsString = settings.launchArgs;
     final launchArgs = argsString.split(' ');
     final result = await Process.start(
-      '${settings.tyDirectoryPath}/Ty.exe',
+      '${settings.tyDirectoryPath}/${GameProvider.getExecutableName(selectedGame)}',
       launchArgs,
       workingDirectory: settings.tyDirectoryPath,
     );
@@ -86,18 +72,5 @@ class LauncherService {
       MemoryEditor.deinit();
       print('Process exited with code: $exitCode');
     });
-  }
-
-  Future<void> showErrorBox(BuildContext context, String message) async {
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Error"),
-          content: Text(message),
-          actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Okay"))],
-        );
-      },
-    );
   }
 }

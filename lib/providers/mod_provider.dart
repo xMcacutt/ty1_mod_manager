@@ -45,17 +45,6 @@ class ModProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> checkFirstRun() async {
-    _isFirstRun = await _settingsService.isFirstRun();
-    notifyListeners();
-  }
-
-  Future<void> completeSetup({required bool autoComplete, required String? tyDirectoryPath}) async {
-    await _settingsService.completeSetup(autoComplete: autoComplete, tyDirectoryPath: tyDirectoryPath);
-    _isFirstRun = false;
-    notifyListeners();
-  }
-
   Future<bool> addCustomMod(FilePickerResult result) async {
     final success = await _modService.addCustomMod(result);
     if (success) {

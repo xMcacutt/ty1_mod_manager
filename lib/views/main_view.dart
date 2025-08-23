@@ -1,156 +1,74 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/providers/mod_provider.dart';
+import 'package:ty1_mod_manager/models/code.dart';
+import 'package:ty1_mod_manager/providers/code_provider.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';
-import 'package:ty1_mod_manager/services/settings_service.dart';
-import 'package:ty1_mod_manager/services/update_manager_service.dart';
-import 'package:ty1_mod_manager/services/version_service.dart';
-import 'package:ty1_mod_manager/views/mm_app_bar.dart';
-import 'package:ty1_mod_manager/views/mod_listing.dart';
-import 'package:ty1_mod_manager/services/launcher_service.dart';
+import 'package:ty1_mod_manager/views/about_view.dart';
+import 'package:ty1_mod_manager/views/codes_view.dart';
+import 'package:ty1_mod_manager/views/mod_directory_view.dart';
 import 'package:ty1_mod_manager/views/mv_bottom_app_bar.dart';
+import 'package:ty1_mod_manager/views/my_mods_view.dart';
+import 'package:ty1_mod_manager/views/settings_view.dart';
+import '../views/mm_app_bar.dart';
+import '../views/app_drawer.dart';
+import '../providers/mod_provider.dart';
+import '../services/launcher_service.dart';
+import '../services/settings_service.dart';
 
-import '../main.dart';
-
-class MainView extends StatefulWidget {
-  const MainView({super.key});
+class RootView extends StatefulWidget {
+  const RootView({super.key});
 
   @override
-  _MainViewState createState() => _MainViewState();
+  _RootViewState createState() => _RootViewState();
 }
 
-class _MainViewState extends State<MainView> with RouteAware {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final modProvider = Provider.of<ModProvider>(context, listen: false);
-      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-      final updateManager = Provider.of<UpdateManagerService>(context, listen: false);
+class _RootViewState extends State<RootView> {
+  int _currentIndex = 0;
+  final List<Widget> _pages = const [MyModsView(), CodesView(), ModDirectoryView(), SettingsView(), AboutView()];
 
-      modProvider.checkFirstRun();
-      modProvider.loadMods();
-      settingsProvider.loadSettings();
-      updateManager.checkForUpdate();
+  final List<String> _titles = ["My Mods", "Codes", "Mod Directory", "Settings", "About"];
+
+  void _setPage(int index) {
+    setState(() {
+      _currentIndex = index;
+      var gameProvider = Provider.of<GameProvider>(context, listen: false);
+      if (index == 0) {
+        var modProvider = Provider.of<ModProvider>(context, listen: false);
+        modProvider.loadMods();
+      }
+      if (index == 1) {
+        var codeProvider = Provider.of<CodeProvider>(context, listen: false);
+        codeProvider.loadCodes(gameProvider.selectedGame);
+      }
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    super.didPopNext();
-    var modProvider = Provider.of<ModProvider>(context, listen: false);
-    modProvider.loadMods();
   }
 
   @override
   Widget build(BuildContext context) {
     final modProvider = Provider.of<ModProvider>(context);
-    final settingsService = Provider.of<SettingsService>(context);
-    final launcherService = Provider.of<LauncherService>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final launcherService = Provider.of<LauncherService>(context, listen: false);
+    final settingsService = Provider.of<SettingsService>(context, listen: false);
 
     return Scaffold(
-      appBar: MMAppBar(title: "My Mods"),
-      body: Stack(
-        children: [
-          modProvider.isLoading
-              ? Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: modProvider.mods.length,
-                itemBuilder: (context, index) {
-                  final mod = modProvider.mods[index];
-                  final isSelected = modProvider.selectedMods.contains(mod);
-                  return ModListing(
-                    mod: mod,
-                    isSelected: isSelected,
-                    onSelected: (_) => modProvider.toggleModSelection(mod),
-                  );
-                },
-              ),
-          if (modProvider.isFirstRun)
-            AlertDialog(
-              title: Text('Welcome!'),
-              content: Text('Do you want me to automatically set up your modded Ty directory?'),
-              actions: [
-                TextButton(
-                  onPressed: () => modProvider.completeSetup(autoComplete: false, tyDirectoryPath: null),
-                  child: Text('No'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final result = await settingsService.pickDirectory(context);
-                    if (result != null) {
-                      await modProvider.completeSetup(autoComplete: true, tyDirectoryPath: result);
-                    }
-                  },
-                  child: Text('Yes'),
-                ),
-              ],
-            ),
-        ],
+      appBar: MMAppBar(title: _titles[_currentIndex]),
+      drawer: AppDrawer(onSelectPage: _setPage),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        switchInCurve: Curves.easeIn,
+        switchOutCurve: Curves.easeOut,
+        child: _pages[_currentIndex],
+        transitionBuilder: (child, animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                image: DecorationImage(image: AssetImage('resource/fe_041.png'), fit: BoxFit.cover),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  Text('Mod Manager', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  Text('Version ${getAppVersion()}', style: TextStyle(fontSize: 16, color: Colors.white70)),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.boxArchive),
-              title: Text("My Mods"),
-              subtitle: Text("View and manage your mods."),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.code),
-              title: Text("Codes"),
-              subtitle: Text("View and manage codes."),
-              onTap: () => Navigator.pushNamed(context, '/codes'),
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.book),
-              title: Text("Mod Directory"),
-              subtitle: Text("Browse officially supported mods."),
-              onTap: () => Navigator.pushNamed(context, '/mod_directory'),
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.gear),
-              title: Text("Settings"),
-              subtitle: Text("Edit the mod manager settings."),
-              onTap: () => Navigator.pushNamed(context, '/settings'),
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.circleInfo),
-              title: Text("About"),
-              subtitle: Text("About the mod manager."),
-              onTap: () => Navigator.pushNamed(context, '/about'),
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavBar(
+        modProvider: modProvider,
+        settingsProvider: settingsProvider,
+        launcherService: launcherService,
+        settingsService: settingsService,
       ),
-      bottomNavigationBar: buildBottomNavBar(context, modProvider, launcherService, settingsService),
     );
   }
 }

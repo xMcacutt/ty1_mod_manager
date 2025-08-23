@@ -15,7 +15,7 @@ class MMAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, gameProvider, child) {
         return AppBar(
           toolbarHeight: 150,
-          title: const Text('Mod Manager', style: TextStyle(fontFamily: 'SF Slapstick Comic', fontSize: 27)),
+          title: Text(title, style: TextStyle(fontFamily: 'SF Slapstick Comic', fontSize: 27)),
           actions: const [],
           flexibleSpace: Container(
             decoration: BoxDecoration(

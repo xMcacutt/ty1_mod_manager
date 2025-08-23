@@ -4,13 +4,15 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 
 class UpdateManagerService {
   final SettingsService settingsService;
+  final GameProvider gameProvider;
 
-  UpdateManagerService(this.settingsService);
+  UpdateManagerService(this.settingsService, this.gameProvider);
 
   Future<String?> checkForUpdate({bool updateFramework = true}) async {
     try {
@@ -33,7 +35,7 @@ class UpdateManagerService {
       }
 
       print("New version available: $latestVersion. Downloading...");
-      final settings = await settingsService.loadSettings();
+      final settings = await settingsService.loadSettings(gameProvider.selectedGame);
       if (settings == null) return null;
       if (updateFramework && await downloadAndUpdateTygerFramework(settings.tyDirectoryPath) == false) return null;
       return await downloadAndPrepareUpdate(downloadUrl, latestVersion);

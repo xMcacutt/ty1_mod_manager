@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/services/utils.dart';
 import '../models/settings.dart';
 
@@ -23,20 +24,19 @@ class SettingsService {
     }
   }
 
-  // Save settings to shared_preferences
-  Future<void> saveSettings(Settings settings) async {
+  Future<void> saveSettings(String game, Settings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('settings', settings.toJson());
+    await prefs.setString('settings_${getSettingsName(game)}', settings.toJson());
   }
 
-  // Load settings from shared_preferences
-  Future<Settings?> loadSettings() async {
+  Future<Settings?> loadSettings(String game) async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('settings');
+    final jsonString = prefs.getString('settings${getSettingsName(game)}');
     if (jsonString != null) {
       return Settings.fromJson(jsonString);
     }
-    return null; // Return null if no settings are saved yet
+    print("No settings found");
+    return null;
   }
 
   Future<bool> isFirstRun() async {
@@ -44,20 +44,27 @@ class SettingsService {
     return prefs.getBool('isFirstRun') ?? true;
   }
 
-  Future<void> completeSetup({required bool autoComplete, required String? tyDirectoryPath}) async {
+  Future<void> completeSetup({
+    required String game,
+    required bool autoComplete,
+    required String? tyDirectoryPath,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isFirstRun', false);
     if (autoComplete && tyDirectoryPath != null) {
       final source = Directory(tyDirectoryPath);
-      final destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger - Mod Managed");
+      var gameString = "";
+      if (game == "Ty 2") gameString = "2 ";
+      if (game == "Ty 3") gameString = "3 ";
+      final destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger ${gameString}- Mod Managed");
       await recursiveCopyDirectory(source, destination);
       final settings = Settings(tyDirectoryPath: destination.path, launchArgs: '', updateManager: true);
-      await isValidDirectory(destination.path);
-      await saveSettings(settings);
+      await isValidDirectory(game, destination.path);
+      await saveSettings(game, settings);
     }
   }
 
-  Future<String?> pickDirectory(BuildContext context) async {
+  Future<String?> pickDirectory() async {
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: "Select vanilla Ty install folder...",
       lockParentWindow: true,
@@ -65,9 +72,9 @@ class SettingsService {
     return result;
   }
 
-  Future<bool> isValidDirectory(String directoryPath) async {
+  Future<bool> isValidDirectory(String game, String directoryPath) async {
     final baseDirectory = Directory(directoryPath);
-    final exe = File('${baseDirectory.path}/TY.exe');
+    final exe = File('${baseDirectory.path}/${GameProvider.getExecutableName(game)}');
     if (!await exe.exists()) {
       return false;
     }
@@ -91,5 +98,18 @@ class SettingsService {
       File(dll.path).writeAsBytesSync(response.bodyBytes);
     }
     return true;
+  }
+
+  static String getSettingsName(String game) {
+    switch (game) {
+      case 'Ty 1':
+        return '';
+      case 'Ty 2':
+        return '_ty_2';
+      case 'Ty 3':
+        return '_ty_3';
+      default:
+        return '';
+    }
   }
 }

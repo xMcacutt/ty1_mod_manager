@@ -1,17 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/settings.dart';
+import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import '../services/settings_service.dart';
 
 class SettingsProvider with ChangeNotifier {
   late SettingsService _settingsService;
   late UpdateManagerService _updateManagerService;
+  late GameProvider _gameProvider;
 
-  void initialize(SettingsService settingsService, UpdateManagerService updateManagerService) {
+  void initialize(
+    SettingsService settingsService,
+    UpdateManagerService updateManagerService,
+    GameProvider gameProvider,
+  ) {
     _settingsService = settingsService;
     _updateManagerService = updateManagerService;
+    _gameProvider = gameProvider;
   }
 
   String _tyDirectoryPath = '';
@@ -31,11 +39,15 @@ class SettingsProvider with ChangeNotifier {
   Future<Settings?> loadSettings() async {
     _isLoading = true;
     notifyListeners();
-    final settings = await _settingsService.loadSettings();
+    final settings = await _settingsService.loadSettings(_gameProvider.selectedGame);
     if (settings != null) {
       _tyDirectoryPath = settings.tyDirectoryPath;
       _autoUpdateModManager = settings.updateManager;
       _launchArgs = settings.launchArgs;
+    } else {
+      _tyDirectoryPath = '';
+      _autoUpdateModManager = false;
+      _launchArgs = '';
     }
     _isLoading = false;
     notifyListeners();
@@ -67,18 +79,10 @@ class SettingsProvider with ChangeNotifier {
   Future<bool> saveSettings(BuildContext context) async {
     _isLoading = true;
     notifyListeners();
-    if (!await _settingsService.isValidDirectory(_tyDirectoryPath)) {
+    if (!await _settingsService.isValidDirectory(_gameProvider.selectedGame, _tyDirectoryPath)) {
       _isLoading = false;
       notifyListeners();
-      await showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text("Invalid Directory"),
-              content: Text("Please select a valid Ty directory path."),
-              actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Okay"))],
-            ),
-      );
+      dialogService.showError("Invalid Directory", "Please select a valid Ty directory path.");
       return false;
     }
     final settings = Settings(
@@ -86,7 +90,7 @@ class SettingsProvider with ChangeNotifier {
       updateManager: _autoUpdateModManager,
       launchArgs: _launchArgs,
     );
-    await _settingsService.saveSettings(settings);
+    await _settingsService.saveSettings(_gameProvider.selectedGame, settings);
     _isLoading = false;
     notifyListeners();
     return true;
@@ -105,5 +109,16 @@ class SettingsProvider with ChangeNotifier {
     _isUpdating = false;
     notifyListeners();
     return true;
+  }
+
+  Future<void> checkFirstRun() async {
+    if (!await _settingsService.isFirstRun()) return;
+    var game = await dialogService.showGameSelection();
+    if (game == null) return;
+    _gameProvider.setGame(game);
+  }
+
+  void runSetup() {
+    dialogService.showSetup(_gameProvider.selectedGame, _settingsService);
   }
 }

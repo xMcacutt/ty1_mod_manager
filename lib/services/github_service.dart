@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/main.dart';
 
 Future<bool> download(BuildContext context, String fileUrl, String savePath) async {
   try {
@@ -13,31 +14,11 @@ Future<bool> download(BuildContext context, String fileUrl, String savePath) asy
       await file.writeAsBytes(response.bodyBytes);
       return true;
     } else {
-      _showErrorDialog(context, 'Failed to download file. Status code: ${response.statusCode}');
+      dialogService.showError('Error', 'Failed to download file. Status code: ${response.statusCode}');
       return false;
     }
   } catch (e) {
-    _showErrorDialog(context, 'Error occurred while downloading the file: $e');
+    dialogService.showError('Error', 'Error occurred while downloading the file: $e');
     return false;
   }
-}
-
-void _showErrorDialog(BuildContext context, String message) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('OK'),
-          ),
-        ],
-      );
-    },
-  );
 }

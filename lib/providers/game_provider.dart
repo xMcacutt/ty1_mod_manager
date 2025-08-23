@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/providers/code_provider.dart';
+import 'package:ty1_mod_manager/providers/mod_provider.dart';
+import 'package:ty1_mod_manager/providers/settings_provider.dart';
 
 class GameProvider extends ChangeNotifier {
   String _selectedGame = 'Ty 1';
@@ -15,12 +19,17 @@ class GameProvider extends ChangeNotifier {
   String get bannerImage => _bannerImages[_selectedGame] ?? 'resource/Ty1_Env.png';
 
   CodeProvider? _codeProvider;
+  SettingsProvider? _settingsProvider;
+  ModProvider? _modProvider;
+
   GameProvider(this._codeProvider) {
     _loadSelectedGame();
   }
 
-  void setCodeProvider(CodeProvider provider) {
+  void setCodeProvider(CodeProvider provider, SettingsProvider settingsProvider, ModProvider modProvider) {
     _codeProvider = provider;
+    _settingsProvider = settingsProvider;
+    _modProvider = modProvider;
   }
 
   Future<void> _loadSelectedGame() async {
@@ -31,10 +40,31 @@ class GameProvider extends ChangeNotifier {
 
   Future<void> setGame(String game) async {
     _selectedGame = game;
+    _modProvider?.loadMods();
     _codeProvider?.loadCodes(game);
+    var settings = await _settingsProvider?.loadSettings();
+
+    if (_settingsProvider != null) {
+      if (settings == null || !await Directory(settings.tyDirectoryPath).exists()) {
+        _settingsProvider?.runSetup();
+      }
+    }
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selected_game', game);
+  }
+
+  static String getExecutableName(String game) {
+    switch (game) {
+      case 'Ty 1':
+        return 'TY.exe';
+      case 'Ty 2':
+        return 'TY2.exe';
+      case 'Ty 3':
+        return 'TY3.exe';
+      default:
+        return 'TY.exe';
+    }
   }
 }
