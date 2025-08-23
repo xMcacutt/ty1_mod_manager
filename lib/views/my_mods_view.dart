@@ -51,6 +51,7 @@ class _MyModsViewState extends State<MyModsView> with RouteAware {
                 final mod = modProvider.mods[index];
                 final isSelected = modProvider.selectedMods.contains(mod);
                 return ModListing(
+                  key: UniqueKey(),
                   mod: mod,
                   isSelected: isSelected,
                   onSelected: (_) => modProvider.toggleModSelection(mod),

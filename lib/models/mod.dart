@@ -46,7 +46,7 @@ class Mod {
       dllName: json['dll_name'] ?? '',
       downloadUrl: json['download_url'] ?? '',
       website: json['website'] ?? '',
-      games: json['games'] ?? ['Ty 1'],
+      games: List<String>.from(json['games'] ?? ['Ty 1']),
     );
   }
 
