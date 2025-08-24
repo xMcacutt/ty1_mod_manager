@@ -45,7 +45,11 @@ Below is a list of the fields which should be defined in the json.
 
 #### Dependencies
 
-Dependency dlls can be added to your mod_info as long as they can be downloaded from a link you provide. The following properties must be defined on all dependency objects
+Dependencies come in two forms. Internal dependencies are dependencies required for functions specific to the mod. These dependecies can be added to a Dependencies directory in the mod zip.
+
+External dependencies should be used when the dependency may apply to multiple mods. These dlls can be added to your mod_info as long as they can be downloaded from a link you provide. The following properties must be defined on all dependency objects
+
+Note that internal dependencies do not need specifying in mod_info.json
 
 | Property   | Description                                                                                                                                                                                                                  |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
