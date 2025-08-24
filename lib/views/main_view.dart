@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/models/code.dart';
 import 'package:ty1_mod_manager/providers/code_provider.dart';
 import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';

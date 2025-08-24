@@ -131,9 +131,13 @@ class ModService {
       }
     }
 
+    final internalDepsDir = Directory('${modDir.path}/Dependencies');
+    if (!(await internalDepsDir.exists())) {
+      await internalDepsDir.create();
+    }
+
     await installDeps(mod);
 
-    // Save mod info to mod_info.json
     final modInfoFile = File('${modDir.path}/mod_info.json');
     await modInfoFile.writeAsString(jsonEncode(mod.toJson()));
 
@@ -171,6 +175,22 @@ class ModService {
     }
   }
 
+  Future<void> copyInternalDependencies(Mod mod, String tyDirectoryPath) async {
+    final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
+    final internalDepsDir = Directory('${modDir.path}/Dependencies');
+
+    if (await internalDepsDir.exists()) {
+      for (var file in await internalDepsDir.list().toList()) {
+        if (file is File) {
+          final destFilePath = '$tyDirectoryPath/Plugins/Dependencies/${path.basename(file.path)}';
+          if (!await File(destFilePath).exists()) {
+            await file.copy(destFilePath);
+          }
+        }
+      }
+    }
+  }
+
   Future<void> copyModFiles(Mod mod, String tyDirectoryPath) async {
     final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
     final dllFile = File('${modDir.path}/${mod.dllName}.dll');
@@ -182,6 +202,8 @@ class ModService {
     if (await patchFile.exists()) {
       await patchFile.copy('$tyDirectoryPath/Patch_PC.rkv');
     }
+
+    await copyInternalDependencies(mod, tyDirectoryPath);
   }
 
   Future<Directory> getDepsDirectory() async {
@@ -236,8 +258,13 @@ class ModService {
       await tempCopyDir.delete(recursive: true);
       return false;
     }
-    for (var entry in tempCopyDir.listSync()) {
-      if (entry is File) await entry.copy('${modDir.path}/${entry.uri.pathSegments.last}');
+    for (var entry in tempCopyDir.listSync(recursive: true)) {
+      if (entry is File) {
+        final relativePath = entry.path.substring(tempCopyDir.path.length + 1);
+        final destFile = File('${modDir.path}/$relativePath');
+        await destFile.create(recursive: true);
+        await entry.copy(destFile.path);
+      }
     }
     if (!await installDeps(mod)) {
       await tempCopyDir.delete(recursive: true);
