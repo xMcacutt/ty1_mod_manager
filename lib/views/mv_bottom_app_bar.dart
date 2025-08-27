@@ -51,9 +51,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
                   label: 'Add Custom',
                   icon: Icons.folder_open_rounded,
                   onPressed: () async {
-                    final result = await widget.settingsService.pickDirectory();
+                    final result = await widget.settingsProvider.pickDirectory();
                     if (result != null) {
-                      await widget.settingsService.completeSetup(
+                      await widget.settingsProvider.completeSetup(
                         game: value.selectedGame,
                         autoComplete: true,
                         tyDirectoryPath: result,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ty1_mod_manager/providers/settings_provider.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 
 class DialogService {
@@ -84,30 +85,49 @@ class DialogService {
     );
   }
 
-  void showSetup(String game, SettingsService settingsService) {
+  void showSetup(String game, SettingsProvider settingsProvider) {
     showDialog(
       context: navigatorKey.currentContext!,
       builder:
           (context) => AlertDialog(
-            title: Text('No modded directory is set for this game!'),
+            title: const Text('No modded directory is set for this game!'),
             content: Text('Do you want me to automatically set up your modded $game directory?'),
             actions: [
               TextButton(
                 onPressed: () {
-                  settingsService.completeSetup(game: game, autoComplete: false, tyDirectoryPath: null);
+                  settingsProvider.completeSetup(game: game, autoComplete: false, tyDirectoryPath: null);
                   Navigator.of(context).pop();
                 },
-                child: Text('No'),
+                child: const Text('No'),
               ),
               TextButton(
                 onPressed: () async {
-                  final result = await settingsService.pickDirectory();
+                  showDialog(
+                    context: navigatorKey.currentContext!,
+                    barrierDismissible: false,
+                    builder:
+                        (context) => const AlertDialog(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Setting up modded directory...'),
+                            ],
+                          ),
+                        ),
+                  );
+
+                  final result = await settingsProvider.pickDirectory();
                   if (result != null) {
-                    await settingsService.completeSetup(game: game, autoComplete: true, tyDirectoryPath: result);
+                    await settingsProvider.completeSetup(game: game, autoComplete: true, tyDirectoryPath: result);
                   }
+
+                  Navigator.of(navigatorKey.currentContext!).pop();
+
                   Navigator.of(context).pop();
                 },
-                child: Text('Yes'),
+                child: const Text('Yes'),
               ),
             ],
           ),

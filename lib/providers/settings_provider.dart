@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/models/settings.dart';
 import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/services/update_manager_service.dart';
+import 'package:ty1_mod_manager/services/utils.dart';
 import '../services/settings_service.dart';
 
 class SettingsProvider with ChangeNotifier {
@@ -54,6 +58,34 @@ class SettingsProvider with ChangeNotifier {
     return settings;
   }
 
+  Future<bool> checkForUpdates(BuildContext context) async {
+    _isUpdating = true;
+    notifyListeners();
+
+    bool updateSuccessful = await _updateManagerService.downloadAndUpdateTygerFramework(_tyDirectoryPath);
+
+    if (!updateSuccessful) {
+      await dialogService.showError(
+        "Update Failed",
+        "Could not update TygerFramework.\nMake sure you have a valid Ty directory path and internet connection.",
+      );
+      _isUpdating = false;
+      notifyListeners();
+      return false;
+    }
+
+    String? batchFilePath = await _updateManagerService.checkForUpdate(updateFramework: false);
+
+    _isUpdating = false;
+    notifyListeners();
+
+    if (batchFilePath != null) {
+      _updateManagerService.updateApp(batchFilePath);
+    }
+
+    return true;
+  }
+
   void updateTyDirectoryPath(String path) {
     _tyDirectoryPath = path;
     notifyListeners();
@@ -76,6 +108,14 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> pickDirectory() async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: "Select vanilla Ty install folder...",
+      lockParentWindow: true,
+    );
+    return result;
+  }
+
   Future<bool> saveSettings(BuildContext context) async {
     _isLoading = true;
     notifyListeners();
@@ -96,21 +136,6 @@ class SettingsProvider with ChangeNotifier {
     return true;
   }
 
-  Future<bool> checkForUpdates(BuildContext context) async {
-    _isUpdating = true;
-    notifyListeners();
-    final updateSuccessful = await _settingsService.downloadAndUpdateTygerFramework(_tyDirectoryPath);
-    if (!updateSuccessful) {
-      _isUpdating = false;
-      notifyListeners();
-      return false;
-    }
-    await _updateManagerService.checkForUpdate(updateFramework: false);
-    _isUpdating = false;
-    notifyListeners();
-    return true;
-  }
-
   Future<void> checkFirstRun() async {
     if (!await _settingsService.isFirstRun()) return;
     var game = await dialogService.showGameSelection();
@@ -119,6 +144,28 @@ class SettingsProvider with ChangeNotifier {
   }
 
   void runSetup() {
-    dialogService.showSetup(_gameProvider.selectedGame, _settingsService);
+    dialogService.showSetup(_gameProvider.selectedGame, this);
+  }
+
+  Future<void> completeSetup({
+    required String game,
+    required bool autoComplete,
+    required String? tyDirectoryPath,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstRun', false);
+    if (autoComplete && tyDirectoryPath != null) {
+      final source = Directory(tyDirectoryPath);
+      var gameString = "";
+      if (game == "Ty 2") gameString = "2 ";
+      if (game == "Ty 3") gameString = "3 ";
+      final destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger ${gameString}- Mod Managed");
+      await recursiveCopyDirectory(source, destination);
+      final settings = Settings(tyDirectoryPath: destination.path, launchArgs: '', updateManager: true);
+      await _settingsService.isValidDirectory(game, destination.path);
+      await _settingsService.saveSettings(game, settings);
+      tyDirectoryPath = destination.path;
+      await loadSettings();
+    }
   }
 }

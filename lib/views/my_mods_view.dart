@@ -24,12 +24,10 @@ class _MyModsViewState extends State<MyModsView> with RouteAware {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final modProvider = Provider.of<ModProvider>(context, listen: false);
       final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-      final updateManager = Provider.of<UpdateManagerService>(context, listen: false);
 
       settingsProvider.loadSettings();
       settingsProvider.checkFirstRun();
       modProvider.loadMods();
-      updateManager.checkForUpdate();
     });
   }
 

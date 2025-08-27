@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:ty1_mod_manager/providers/code_provider.dart';
 import 'package:ty1_mod_manager/providers/game_provider.dart';
 import 'package:ty1_mod_manager/providers/settings_provider.dart';
+import 'package:ty1_mod_manager/services/update_manager_service.dart';
 import 'package:ty1_mod_manager/views/about_view.dart';
 import 'package:ty1_mod_manager/views/codes_view.dart';
 import 'package:ty1_mod_manager/views/mod_directory_view.dart';
@@ -27,6 +28,13 @@ class _RootViewState extends State<RootView> {
   final List<Widget> _pages = const [MyModsView(), CodesView(), ModDirectoryView(), SettingsView(), AboutView()];
 
   final List<String> _titles = ["My Mods", "Codes", "Mod Directory", "Settings", "About"];
+
+  @override
+  void initState() {
+    super.initState();
+    final updateManager = Provider.of<UpdateManagerService>(context, listen: false);
+    updateManager.checkForUpdate(showUpToDate: false);
+  }
 
   void _setPage(int index) {
     setState(() {

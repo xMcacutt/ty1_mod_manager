@@ -8,25 +8,9 @@ import 'package:ty1_mod_manager/services/utils.dart';
 import '../models/settings.dart';
 
 class SettingsService {
-  Future<bool> downloadAndUpdateTygerFramework(String tyDirectoryPath) async {
-    try {
-      // Placeholder: Implement actual download logic, possibly using GitHubService
-      final response = await http.get(Uri.parse('https://api.github.com/repos/example/tygerframework/releases/latest'));
-      if (response.statusCode == 200) {
-        // Simulate downloading and updating in tyDirectoryPath
-        print('Downloaded TygerFramework to $tyDirectoryPath');
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print('Update failed: $e');
-      return false;
-    }
-  }
-
   Future<void> saveSettings(String game, Settings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('settings_${getSettingsName(game)}', settings.toJson());
+    await prefs.setString('settings${getSettingsName(game)}', settings.toJson());
   }
 
   Future<Settings?> loadSettings(String game) async {
@@ -42,34 +26,6 @@ class SettingsService {
   Future<bool> isFirstRun() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('isFirstRun') ?? true;
-  }
-
-  Future<void> completeSetup({
-    required String game,
-    required bool autoComplete,
-    required String? tyDirectoryPath,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isFirstRun', false);
-    if (autoComplete && tyDirectoryPath != null) {
-      final source = Directory(tyDirectoryPath);
-      var gameString = "";
-      if (game == "Ty 2") gameString = "2 ";
-      if (game == "Ty 3") gameString = "3 ";
-      final destination = Directory("${source.parent.path}/Ty the Tasmanian Tiger ${gameString}- Mod Managed");
-      await recursiveCopyDirectory(source, destination);
-      final settings = Settings(tyDirectoryPath: destination.path, launchArgs: '', updateManager: true);
-      await isValidDirectory(game, destination.path);
-      await saveSettings(game, settings);
-    }
-  }
-
-  Future<String?> pickDirectory() async {
-    final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: "Select vanilla Ty install folder...",
-      lockParentWindow: true,
-    );
-    return result;
   }
 
   Future<bool> isValidDirectory(String game, String directoryPath) async {
