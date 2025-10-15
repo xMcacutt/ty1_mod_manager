@@ -304,24 +304,32 @@ class ModService {
     final response = await http.get(Uri.parse(modDirectoryJsonUrl));
 
     if (response.statusCode != 200) {
-      print("Failed to fetch mod directory");
       return [];
     }
 
     final modData = jsonDecode(response.body) as List<dynamic>;
     final remoteMods = <Mod>[];
+
     for (var modListing in modData) {
       final modInfoUrl = "${modListing['mod_info_url']}?${DateTime.now().millisecondsSinceEpoch}";
-      final modResponse = await http.get(Uri.parse(modInfoUrl));
-      if (modResponse.statusCode == 200) {
-        var mod = Mod.fromJson(jsonDecode(modResponse.body));
+      try {
+        final modResponse = await http.get(Uri.parse(modInfoUrl));
+
+        if (modResponse.statusCode != 200) {
+          continue;
+        }
+
+        final decoded = jsonDecode(modResponse.body);
+        final mod = Mod.fromJson(decoded);
+
         if (mod.games.contains(game)) {
           remoteMods.add(mod);
         }
-      } else {
-        print("Failed to fetch mod info: $modInfoUrl");
+      } catch (e) {
+        continue;
       }
     }
+
     return remoteMods;
   }
 }
