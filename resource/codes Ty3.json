@@ -1,2 +1,13 @@
 [
+    {
+        "name": "Free Aim",
+        "description": "Rang goes where the camera is pointing.",
+        "codes": 
+        [
+            {
+                "address": "13cf9a",
+                "bytes": "90 90"
+            }
+        ]
+    },
 ]
