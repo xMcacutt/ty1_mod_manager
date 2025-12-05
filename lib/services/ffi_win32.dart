@@ -29,13 +29,22 @@ class MemoryEditor {
   static Future<void> waitForProcessToStart(int pid) async {
     while (true) {
       hProcess = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
+
       if (hProcess != 0) {
-        // Process is now open, you can proceed
-        await Future.delayed(Duration(milliseconds: 1000));
-        getModuleBaseAddress();
-        break;
+        await Future.delayed(Duration(milliseconds: 100));
+
+        while (true) {
+          try {
+            getModuleBaseAddress();
+            if (moduleBase != 0) {
+              return;
+            }
+          } catch (ex) {
+            print(ex);
+          }
+          await Future.delayed(Duration(milliseconds: 100));
+        }
       }
-      // Wait for a moment before checking again
       await Future.delayed(Duration(milliseconds: 100));
     }
   }

@@ -35,6 +35,7 @@ class GameProvider extends ChangeNotifier {
   Future<void> _loadSelectedGame() async {
     final prefs = await SharedPreferences.getInstance();
     _selectedGame = prefs.getString('selected_game') ?? 'Ty 1';
+    await setGame(_selectedGame);
     notifyListeners();
   }
 
