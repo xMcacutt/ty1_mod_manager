@@ -17,31 +17,46 @@ class UpdateManagerService {
 
   Future<String?> checkForUpdate({bool updateFramework = true, bool showUpToDate = true}) async {
     try {
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final metadataUrls = [
-        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
-        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest.json?$timestamp",
-        // Fallback to old repo name in case redirects break.
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?$timestamp",
-      ];
+      Map<String, dynamic>? latestData;
+      String? metadataSource;
 
-      http.Response? response;
-      String? metadataUrlUsed;
-      for (final url in metadataUrls) {
-        final res = await http.get(Uri.parse(url));
-        if (res.statusCode == 200) {
-          response = res;
-          metadataUrlUsed = url;
-          break;
-        }
+      final localMetadataPath = "${Directory.current.path}${Platform.pathSeparator}latest_v2.json";
+      final localMetadataFile = File(localMetadataPath);
+      if (await localMetadataFile.exists()) {
+        try {
+          latestData = json.decode(await localMetadataFile.readAsString()) as Map<String, dynamic>;
+          metadataSource = localMetadataPath;
+        } catch (_) {}
       }
-      if (response == null || metadataUrlUsed == null) {
-        print("Could not access update metadata.");
+
+      if (latestData == null) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final metadataUrls = [
+          "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
+          "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest.json?$timestamp",
+        ];
+
+        http.Response? response;
+        for (final url in metadataUrls) {
+          final res = await http.get(Uri.parse(url));
+          if (res.statusCode == 200) {
+            response = res;
+            metadataSource = url;
+            break;
+          }
+        }
+        if (response == null || metadataSource == null) {
+          print("Could not access update metadata.");
+          return null;
+        }
+
+        latestData = json.decode(response.body) as Map<String, dynamic>?;
+      }
+      if (latestData == null) {
+        print("Update metadata is empty or invalid.");
         return null;
       }
 
-      final latestData = json.decode(response.body);
       final latestVersion = latestData["version"];
       final downloadUrl = latestData["download_url"];
       final exeNameOverride = (latestData["exe_name"] as String?)?.trim();
@@ -53,7 +68,7 @@ class UpdateManagerService {
         return null;
       }
 
-      print("New version available: $latestVersion (metadata: $metadataUrlUsed). Downloading...");
+      print("New version available: $latestVersion (metadata: ${metadataSource ?? 'unknown'}). Downloading...");
       final settings = await settingsService.loadSettings(gameProvider.selectedGame);
       if (settings == null) return null;
       if (updateFramework && await downloadAndUpdateTygerFramework(settings.tyDirectoryPath) == false) return null;

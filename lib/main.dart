@@ -13,12 +13,15 @@ import 'package:ty_mod_manager/services/settings_service.dart';
 import 'package:ty_mod_manager/services/update_manager_service.dart';
 import 'package:ty_mod_manager/services/version_service.dart';
 import 'package:ty_mod_manager/views/main_view.dart';
+import 'services/app_data_migration.dart';
 import 'theme.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final dialogService = DialogService(navigatorKey);
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppDataMigration.migrate();
   initAppVersion();
   runApp(const ModManagerApp());
 }
