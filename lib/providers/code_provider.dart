@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:ty1_mod_manager/models/code.dart';
-import 'package:ty1_mod_manager/services/code_service.dart';
+import 'package:ty_mod_manager/models/code.dart';
+import 'package:ty_mod_manager/services/code_service.dart';
 
 class CodeProvider with ChangeNotifier {
   late CodeService _codeService;

@@ -5,8 +5,8 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ty1_mod_manager/services/ffi_win32.dart';
-import 'package:ty1_mod_manager/services/utils.dart';
+import 'package:ty_mod_manager/services/ffi_win32.dart';
+import 'package:ty_mod_manager/services/utils.dart';
 import 'package:win32/win32.dart';
 import '../models/code.dart';
 
@@ -20,7 +20,7 @@ class CodeService {
 
     final response = await http.get(
       Uri.parse(
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/resource/$fileName?${DateTime.now().millisecondsSinceEpoch}",
+        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/resource/$fileName?${DateTime.now().millisecondsSinceEpoch}",
       ),
     );
     if (response.statusCode != 200) {

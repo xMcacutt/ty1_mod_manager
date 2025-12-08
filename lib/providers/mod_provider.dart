@@ -1,10 +1,10 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
-import 'package:ty1_mod_manager/services/settings_service.dart';
-import 'package:ty1_mod_manager/models/mod.dart';
-import 'package:ty1_mod_manager/services/mod_service.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/providers/mod_directory_provider.dart';
+import 'package:ty_mod_manager/services/settings_service.dart';
+import 'package:ty_mod_manager/models/mod.dart';
+import 'package:ty_mod_manager/services/mod_service.dart';
 
 class ModProvider with ChangeNotifier {
   late ModService _modService;

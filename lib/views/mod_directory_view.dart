@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/views/mod_directory_listing.dart';
+import 'package:ty_mod_manager/views/mod_directory_listing.dart';
 import '../models/mod.dart';
 import '../providers/mod_directory_provider.dart';
 

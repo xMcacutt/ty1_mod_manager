@@ -3,8 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/services/utils.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/services/utils.dart';
 import '../models/settings.dart';
 
 class SettingsService {

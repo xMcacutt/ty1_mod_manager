@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ty1_mod_manager/main.dart';
-import 'package:ty1_mod_manager/models/settings.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/services/update_manager_service.dart';
-import 'package:ty1_mod_manager/services/utils.dart';
+import 'package:ty_mod_manager/main.dart';
+import 'package:ty_mod_manager/models/settings.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/services/update_manager_service.dart';
+import 'package:ty_mod_manager/services/utils.dart';
 import '../services/settings_service.dart';
 
 class SettingsProvider with ChangeNotifier {

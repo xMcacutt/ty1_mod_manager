@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/providers/code_provider.dart';
-import 'package:ty1_mod_manager/views/code_listing.dart';
+import 'package:ty_mod_manager/providers/code_provider.dart';
+import 'package:ty_mod_manager/views/code_listing.dart';
 
 class CodesView extends StatelessWidget {
   const CodesView({super.key});

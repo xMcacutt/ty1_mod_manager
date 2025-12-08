@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:ty1_mod_manager/models/mod.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/services/mod_service.dart';
+import 'package:ty_mod_manager/models/mod.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/services/mod_service.dart';
 
 class ModDirectoryProvider with ChangeNotifier {
   late ModService _modService;

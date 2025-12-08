@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/providers/mod_provider.dart';
-import 'package:ty1_mod_manager/providers/settings_provider.dart';
-import 'package:ty1_mod_manager/services/settings_service.dart';
-import 'package:ty1_mod_manager/services/update_manager_service.dart';
-import 'package:ty1_mod_manager/views/mod_listing.dart';
-import 'package:ty1_mod_manager/services/launcher_service.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/providers/mod_provider.dart';
+import 'package:ty_mod_manager/providers/settings_provider.dart';
+import 'package:ty_mod_manager/services/settings_service.dart';
+import 'package:ty_mod_manager/services/update_manager_service.dart';
+import 'package:ty_mod_manager/views/mod_listing.dart';
+import 'package:ty_mod_manager/services/launcher_service.dart';
 
 import '../main.dart';
 

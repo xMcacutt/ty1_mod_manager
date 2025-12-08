@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/main.dart';
+import 'package:ty_mod_manager/main.dart';
 
 Future<bool> download(BuildContext context, String fileUrl, String savePath) async {
   try {

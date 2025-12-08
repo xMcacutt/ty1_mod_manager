@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:ty1_mod_manager/main.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/services/version_service.dart';
-import 'package:ty1_mod_manager/services/settings_service.dart';
+import 'package:ty_mod_manager/main.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/services/version_service.dart';
+import 'package:ty_mod_manager/services/settings_service.dart';
 
 class UpdateManagerService {
   final SettingsService settingsService;
@@ -19,6 +19,9 @@ class UpdateManagerService {
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final metadataUrls = [
+        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
+        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest.json?$timestamp",
+        // Fallback to old repo name in case redirects break.
         "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
         "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?$timestamp",
       ];

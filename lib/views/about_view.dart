@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/services/version_service.dart';
-import 'package:ty1_mod_manager/theme.dart';
+import 'package:ty_mod_manager/services/version_service.dart';
+import 'package:ty_mod_manager/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutView extends StatelessWidget {
@@ -37,7 +37,7 @@ class AboutView extends StatelessWidget {
               InkWell(
                 onTap: () {
                   final url = Uri.parse(
-                    'https://github.com/xMcacutt/ty1_mod_manager/blob/master/README.md#Adding-Mods',
+                    'https://github.com/xMcacutt/ty_mod_manager/blob/master/README.md#Adding-Mods',
                   );
                   _launchURL(url);
                 },
@@ -76,7 +76,7 @@ class AboutView extends StatelessWidget {
               InkWell(
                 onTap: () {
                   final url = Uri.parse(
-                    'https://github.com/xMcacutt/ty1_mod_manager/blob/master/README.md#Adding-Mods',
+                    'https://github.com/xMcacutt/ty_mod_manager/blob/master/README.md#Adding-Mods',
                   );
                   _launchURL(url);
                 },
@@ -93,7 +93,7 @@ class AboutView extends StatelessWidget {
               const SizedBox(height: 8),
               InkWell(
                 onTap: () {
-                  final url = Uri.parse('https://github.com/xMcacutt/ty1_mod_manager/issues');
+                  final url = Uri.parse('https://github.com/xMcacutt/ty_mod_manager/issues');
                   _launchURL(url);
                 },
                 child: const Text(

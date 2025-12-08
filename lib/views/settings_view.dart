@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/main.dart';
+import 'package:ty_mod_manager/main.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsView extends StatelessWidget {

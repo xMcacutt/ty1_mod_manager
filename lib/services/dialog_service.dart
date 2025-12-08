@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/providers/settings_provider.dart';
-import 'package:ty1_mod_manager/services/settings_service.dart';
+import 'package:ty_mod_manager/providers/settings_provider.dart';
+import 'package:ty_mod_manager/services/settings_service.dart';
 
 class DialogService {
   final GlobalKey<NavigatorState> navigatorKey;

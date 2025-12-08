@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:ty1_mod_manager/services/version_service.dart';
+import 'package:ty_mod_manager/services/version_service.dart';
 
 class AppDrawer extends StatelessWidget {
   final void Function(int index) onSelectPage;

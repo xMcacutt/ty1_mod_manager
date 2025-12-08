@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ty1_mod_manager/providers/code_provider.dart';
-import 'package:ty1_mod_manager/providers/mod_provider.dart';
-import 'package:ty1_mod_manager/providers/settings_provider.dart';
+import 'package:ty_mod_manager/providers/code_provider.dart';
+import 'package:ty_mod_manager/providers/mod_provider.dart';
+import 'package:ty_mod_manager/providers/settings_provider.dart';
 
 class GameProvider extends ChangeNotifier {
   String _selectedGame = 'Ty 1';

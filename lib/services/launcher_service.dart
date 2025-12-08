@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/providers/code_provider.dart';
-import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/providers/settings_provider.dart';
-import 'package:ty1_mod_manager/services/dialog_service.dart';
-import 'package:ty1_mod_manager/services/ffi_win32.dart';
+import 'package:ty_mod_manager/providers/code_provider.dart';
+import 'package:ty_mod_manager/providers/game_provider.dart';
+import 'package:ty_mod_manager/providers/settings_provider.dart';
+import 'package:ty_mod_manager/services/dialog_service.dart';
+import 'package:ty_mod_manager/services/ffi_win32.dart';
 import 'dart:io';
 
-import 'package:ty1_mod_manager/models/mod.dart';
-import 'package:ty1_mod_manager/services/mod_service.dart';
+import 'package:ty_mod_manager/models/mod.dart';
+import 'package:ty_mod_manager/services/mod_service.dart';
 
 class LauncherService {
   final ModService modService;

@@ -8,6 +8,60 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 
 class ModService {
+  static const _oldAppSupportDirName = "ty1_mod_manager";
+  static bool _appSupportMigrated = false;
+
+  Future<void> _ensureAppSupportMigration() async {
+    if (_appSupportMigrated) return;
+
+    final targetDir = await getApplicationSupportDirectory();
+    final targetPath = targetDir.path;
+    final parentDir = Directory(path.dirname(targetPath));
+    final oldDir = Directory(path.join(parentDir.path, _oldAppSupportDirName));
+
+    if (oldDir.path == targetPath) {
+      _appSupportMigrated = true;
+      return;
+    }
+
+    final targetExists = await Directory(targetPath).exists();
+    final oldExists = await oldDir.exists();
+
+    if (oldExists) {
+      if (!targetExists || await _isDirectoryEmpty(Directory(targetPath))) {
+        try {
+          await oldDir.rename(targetPath);
+        } catch (_) {
+          await _copyDirectory(oldDir, Directory(targetPath));
+        }
+      }
+    }
+
+    _appSupportMigrated = true;
+  }
+
+  Future<bool> _isDirectoryEmpty(Directory directory) async {
+    try {
+      return (await directory.list().isEmpty);
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _copyDirectory(Directory source, Directory destination) async {
+    await destination.create(recursive: true);
+    await for (final entity in source.list(recursive: true)) {
+      final relativePath = path.relative(entity.path, from: source.path);
+      final newPath = path.join(destination.path, relativePath);
+      if (entity is File) {
+        await File(newPath).create(recursive: true);
+        await entity.copy(newPath);
+      } else if (entity is Directory) {
+        await Directory(newPath).create(recursive: true);
+      }
+    }
+  }
+
   Future<bool> createModDir(Mod mod, Directory modDir) async {
     if (await modDir.exists()) {
       final modInfoFile = File('${modDir.path}/mod_info.json');
@@ -152,6 +206,7 @@ class ModService {
   }
 
   Future<Directory> getModsDirectory() async {
+    await _ensureAppSupportMigration();
     final directory = await getApplicationSupportDirectory();
     final modsDirectory = Directory('${directory.path}/mods');
     if (!modsDirectory.existsSync()) {
@@ -207,6 +262,7 @@ class ModService {
   }
 
   Future<Directory> getDepsDirectory() async {
+    await _ensureAppSupportMigration();
     final directory = await getApplicationSupportDirectory();
     final depsDirectory = Directory('${directory.path}/deps');
     if (!depsDirectory.existsSync()) {
@@ -300,7 +356,7 @@ class ModService {
 
   Future<List<Mod>> fetchRemoteMods(String game) async {
     final modDirectoryJsonUrl =
-        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/mod_directory.json?${DateTime.now().millisecondsSinceEpoch}";
+        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/mod_directory.json?${DateTime.now().millisecondsSinceEpoch}";
     final response = await http.get(Uri.parse(modDirectoryJsonUrl));
 
     if (response.statusCode != 200) {

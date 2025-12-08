@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ty1_mod_manager/providers/mod_directory_provider.dart';
+import 'package:ty_mod_manager/providers/mod_directory_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
-import 'package:ty1_mod_manager/providers/mod_provider.dart';
+import 'package:ty_mod_manager/providers/mod_provider.dart';
 
 import '../models/mod.dart';
 import '../services/mod_service.dart' as modService;

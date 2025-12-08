@@ -2,13 +2,13 @@
 
 ## Setup
 
-To get started using the Ty Mod Manager, simply head to the [releases page](http://github.com/xMcacutt/ty1_mod_manager/releases) and download the most recent mod manager zip.
+To get started using the Ty Mod Manager, simply head to the [releases page](http://github.com/xMcacutt/ty_mod_manager/releases) and download the most recent mod manager zip.
 
 Extract the zip anywhere and run the executable. On your first time loading the mod manager, you'll be asked if you would like to automatically set up a directory for your modded Ty. If yes, you should select your vanilla Ty directory (usually steamapps/common/Ty the Tasmanian Tiger). If no, you should go to the settings tab to set the directory manually.
 
 ## Codes
 
-The codes tab allows you to have global pieces of code modifying the game across mods. To add codes to the list, make a pull request on github to the [codes.json](http://github.com/xMcacutt/ty1_mod_manager/blob/master/resource/codes.json) file.
+The codes tab allows you to have global pieces of code modifying the game across mods. To add codes to the list, make a pull request on github to the [codes.json](http://github.com/xMcacutt/ty_mod_manager/blob/master/resource/codes.json) file.
 
 ## Installing Mods
 
@@ -85,7 +85,7 @@ Note that internal dependencies do not need specifying in mod_info.json
 
 ### The Mod Directory
 
-Once the `mod_info.json` file has been created, you'll need to upload it preferably as a a part of your mod's repository and add it to [mod_directory.json](http://github.com/xMcacutt/ty1_mod_manager/blob/master/mod_directory.json). You should create a pull request and add a name for your mod as well as the raw link to the mod_info file you uploaded. When the mod_directory is accessed in the mod manager, the mod_directory.json file will be accessed to look up each mod's mod_info before creating the listings based on the information you provide. Please ensure your json is valid before creating a pull request.
+Once the `mod_info.json` file has been created, you'll need to upload it preferably as a a part of your mod's repository and add it to [mod_directory.json](http://github.com/xMcacutt/ty_mod_manager/blob/master/mod_directory.json). You should create a pull request and add a name for your mod as well as the raw link to the mod_info file you uploaded. When the mod_directory is accessed in the mod manager, the mod_directory.json file will be accessed to look up each mod's mod_info before creating the listings based on the information you provide. Please ensure your json is valid before creating a pull request.
 
 ### Releasing Your Mods
 
