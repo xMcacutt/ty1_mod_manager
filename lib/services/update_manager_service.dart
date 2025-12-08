@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ty1_mod_manager/main.dart';
 import 'package:ty1_mod_manager/providers/game_provider.dart';
-import 'package:ty1_mod_manager/services/dialog_service.dart';
 import 'package:ty1_mod_manager/services/version_service.dart';
 import 'package:ty1_mod_manager/services/settings_service.dart';
 
@@ -18,17 +17,31 @@ class UpdateManagerService {
 
   Future<String?> checkForUpdate({bool updateFramework = true, bool showUpToDate = true}) async {
     try {
-      String latestVersionUrl =
-          "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?${DateTime.now().millisecondsSinceEpoch}";
-      final response = await http.get(Uri.parse(latestVersionUrl));
-      if (response.statusCode != 200) {
-        print("Could not access file at url");
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final metadataUrls = [
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest_v2.json?$timestamp",
+        "https://raw.githubusercontent.com/xMcacutt/ty1_mod_manager/refs/heads/master/latest.json?$timestamp",
+      ];
+
+      http.Response? response;
+      String? metadataUrlUsed;
+      for (final url in metadataUrls) {
+        final res = await http.get(Uri.parse(url));
+        if (res.statusCode == 200) {
+          response = res;
+          metadataUrlUsed = url;
+          break;
+        }
+      }
+      if (response == null || metadataUrlUsed == null) {
+        print("Could not access update metadata.");
         return null;
       }
 
       final latestData = json.decode(response.body);
       final latestVersion = latestData["version"];
       final downloadUrl = latestData["download_url"];
+      final exeNameOverride = (latestData["exe_name"] as String?)?.trim();
 
       final currentVersion = getAppVersion();
       if (currentVersion == latestVersion) {
@@ -37,11 +50,11 @@ class UpdateManagerService {
         return null;
       }
 
-      print("New version available: $latestVersion. Downloading...");
+      print("New version available: $latestVersion (metadata: $metadataUrlUsed). Downloading...");
       final settings = await settingsService.loadSettings(gameProvider.selectedGame);
       if (settings == null) return null;
       if (updateFramework && await downloadAndUpdateTygerFramework(settings.tyDirectoryPath) == false) return null;
-      return await downloadAndPrepareUpdate(downloadUrl, latestVersion);
+      return await downloadAndPrepareUpdate(downloadUrl, latestVersion, exeName: exeNameOverride);
     } catch (e) {
       print("Update check failed: $e");
       return null;
@@ -67,17 +80,15 @@ class UpdateManagerService {
     }
   }
 
-  Future<String?> downloadAndPrepareUpdate(String url, String newVersion) async {
+  Future<String?> downloadAndPrepareUpdate(String url, String newVersion, {String? exeName}) async {
     final tempDir = await getTemporaryDirectory();
     final updateFolder = "${tempDir.path}\\update";
     final zipFilePath = "${tempDir.path}\\update.zip";
     final batchFilePath = "${tempDir.path}\\update.bat";
     final appDir = Directory.current.path;
 
-    // Ensure update directory is clean
     Directory(updateFolder).createSync(recursive: true);
 
-    // Download the ZIP file
     final response = await http.get(Uri.parse(url));
     if (response.statusCode != 200) {
       print("Download failed.");
@@ -86,7 +97,6 @@ class UpdateManagerService {
     File(zipFilePath).writeAsBytesSync(response.bodyBytes);
     print("Download complete.");
 
-    // Extract ZIP to temp folder
     final bytes = File(zipFilePath).readAsBytesSync();
     final archive = ZipDecoder().decodeBytes(bytes);
     for (final file in archive) {
@@ -101,16 +111,21 @@ class UpdateManagerService {
     }
     print("Update extracted.");
 
-    // Create a batch file to replace files and restart app
-    final exeName = Platform.resolvedExecutable.split(Platform.pathSeparator).last;
+    final targetExeName =
+        (exeName != null && exeName.isNotEmpty)
+            ? exeName
+            : Platform.resolvedExecutable.split(Platform.pathSeparator).last;
+    final currentExeName = Platform.resolvedExecutable.split(Platform.pathSeparator).last;
     final batchContent = '''
     @echo off
-    set "EXE_NAME=$exeName"
+    set "TARGET_EXE_NAME=$targetExeName"
+    set "CURRENT_EXE_NAME=$currentExeName"
     set "APP_DIR=$appDir"
     set "UPDATE_FOLDER=$updateFolder"
 
     echo Killing the old process...
-    taskkill /IM "%EXE_NAME%" /F
+    taskkill /IM "%CURRENT_EXE_NAME%" /F
+    taskkill /IM "%TARGET_EXE_NAME%" /F
     if %ERRORLEVEL% neq 0 echo Failed to terminate process & pause
 
     echo Waiting for 2 seconds...
@@ -121,7 +136,7 @@ class UpdateManagerService {
     if %ERRORLEVEL% neq 0 echo Failed to copy files & pause
 
     echo Starting the new application...
-    start "" "%APP_DIR%\\%EXE_NAME%"
+    start "" "%APP_DIR%\\%TARGET_EXE_NAME%"
     pause
     exit
     ''';
