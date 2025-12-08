@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ty_mod_manager/providers/code_provider.dart';
@@ -13,6 +15,7 @@ import 'package:ty_mod_manager/services/settings_service.dart';
 import 'package:ty_mod_manager/services/update_manager_service.dart';
 import 'package:ty_mod_manager/services/version_service.dart';
 import 'package:ty_mod_manager/views/main_view.dart';
+import 'package:path/path.dart' as path;
 import 'services/app_data_migration.dart';
 import 'theme.dart';
 
@@ -22,6 +25,7 @@ final dialogService = DialogService(navigatorKey);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppDataMigration.migrate();
+  await _removeLegacyExeIfPresent();
   initAppVersion();
   runApp(const ModManagerApp());
 }
@@ -95,5 +99,21 @@ class ModManagerApp extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+Future<void> _removeLegacyExeIfPresent() async {
+  if (!Platform.isWindows) return;
+
+  try {
+    final appDir = Directory.current.path;
+    final oldExe = File(path.join(appDir, 'ty1_mod_manager.exe'));
+    final newExe = File(path.join(appDir, 'ty_mod_manager.exe'));
+    if (await newExe.exists() && await oldExe.exists()) {
+      await oldExe.delete();
+      print("Removed legacy executable ty1_mod_manager.exe");
+    }
+  } catch (e) {
+    print("Failed to remove legacy executable: $e");
   }
 }

@@ -153,6 +153,10 @@ class UpdateManagerService {
     xcopy /E /Y "%UPDATE_FOLDER%\\*" "%APP_DIR%\\"
     if %ERRORLEVEL% neq 0 echo Failed to copy files & pause
 
+    if /I not "%CURRENT_EXE_NAME%"=="%TARGET_EXE_NAME%" (
+      if exist "%APP_DIR%\\%CURRENT_EXE_NAME%" del /F /Q "%APP_DIR%\\%CURRENT_EXE_NAME%"
+    )
+
     echo Starting the new application...
     start "" "%APP_DIR%\\%TARGET_EXE_NAME%"
     pause
