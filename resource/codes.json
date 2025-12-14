@@ -139,5 +139,28 @@
                 "bytes": "X4"
             }
         ]
+    },
+    {
+        "name": "Whacky Resolutions",
+        "description": "Support any resolution with resizing (removes black bars).",
+        "codes":
+        [
+            {
+                "address": "76F2E"
+                "bytes": "00"
+            },
+            {
+                "address": "76F35"
+                "bytes": "00"
+            },
+            {
+                "address": "76F3C"
+                "bytes": "00"
+            },
+            {
+                "address": "76F43"
+                "bytes": "00"
+            }
+        ]
     }
 ]
