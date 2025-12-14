@@ -146,19 +146,19 @@
         "codes":
         [
             {
-                "address": "76F2E"
+                "address": "76F2E",
                 "bytes": "00"
             },
             {
-                "address": "76F35"
+                "address": "76F35",
                 "bytes": "00"
             },
             {
-                "address": "76F3C"
+                "address": "76F3C",
                 "bytes": "00"
             },
             {
-                "address": "76F43"
+                "address": "76F43",
                 "bytes": "00"
             }
         ]
