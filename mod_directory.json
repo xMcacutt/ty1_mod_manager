@@ -28,6 +28,10 @@
     "mod_info_url": "https://raw.githubusercontent.com/FyreDay/Ty2AP-Client/refs/heads/master/mod_info.json"
   },
   {
+    "name": "Ty3 Archipelago Client",
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt-Archipelago/Ty3AP-Client/refs/heads/master/mod_info.json"
+  },
+  {
     "name": "Ty1 Rich Presence",
     "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1-Rich-Presence/refs/heads/master/mod_info.json"
   }
