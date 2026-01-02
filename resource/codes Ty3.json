@@ -9,5 +9,60 @@
                 "bytes": "90 90"
             }
         ]
+    },
+    {
+        "name": "Whacky Resolutions",
+        "description": "Support any resolution with resizing (removes black bars).",
+        "codes":
+        [
+            {
+                "address": "10B2B9",
+                "bytes": "00"
+            },
+            {
+                "address": "10B2E8",
+                "bytes": "00"
+            },
+            {
+                "address": "10B317",
+                "bytes": "00"
+            },
+            {
+                "address": "10B346",
+                "bytes": "00"
+            },
+            {
+                "address": "10B375",
+                "bytes": "00"
+            },
+            {
+                "address": "10B3A4",
+                "bytes": "00"
+            },
+            {
+                "address": "10B3D3",
+                "bytes": "00"
+            },
+            {
+                "address": "10B402",
+                "bytes": "00"
+            },
+            {
+                "address": "10B431",
+                "bytes": "00"
+            },
+            {
+                "address": "10B462",
+                "bytes": "00"
+            },
+            {
+                "address": "10B491",
+                "bytes": "00"
+            },
+            {
+                "address": "10B4C0",
+                "bytes": "00"
+            }
+        ]
     }
 ]
