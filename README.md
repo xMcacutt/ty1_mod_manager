@@ -14,9 +14,34 @@ The codes tab allows you to have global pieces of code modifying the game across
 
 To install a mod, first check the `mod directory` page in the mod manager. If you cannot find the mod in the directory, you might need to install it manually. Find and download the mod's zip file and select it from the `add custom` button on the `my mods` page.
 
+## Launch Arguments
+
+As of v2.0.1, the mod manager now supports command line arguments allowing you to launch installed mods and codes without opening the UI.
+Before explaining the arguments, it must be noted that using command line arguments bypasses the update checking for the mod manager.
+
+Any errors that are generated when using the command line args will be in the ty_mod_manager.log file in %Temp%.
+
+To use direct mode, provide --direct along with the short game name.
+
+```ty_mod_manager.exe --direct ty2```
+
+This will bypass the mod manager and launch the game. 
+
+If the --mods argument is not provided, this will launch the last mods that you selected in the UI.
+
+If --mods is provided, you must then provide a list of comma separated mod names to load (use "s to escape spaces). The names must match those seen in the UI mods list.
+
+```ty_mod_manager.exe --direct ty1 --mods "Archipelago Client","Discord Rich Presence"```
+
+If you also want to inject the codes that you last had selected then provide `--codes`  
+
+```ty_mod_manager.exe --direct ty3 --mods "Ty3 AP Client" --codes```
+
+When the mod manager is added to steam, these arguments can be provided as launch options to make steam listings for each individual mod.
+
 ## Adding Mods
 
-`FOR MOD DEVELOPERS ONLY`
+### FOR MOD DEVELOPERS ONLY
 
 If you wish to add a mod you've created to this project, you'll need to reformat your release structure.
 

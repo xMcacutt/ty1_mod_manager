@@ -134,3 +134,29 @@ class DialogService {
     );
   }
 }
+
+class NullDialogService implements DialogService {
+  GlobalKey<NavigatorState> get navigatorKey => GlobalKey<NavigatorState>();
+
+  Future<String?> showGameSelection() {
+    return Future.value(null);
+  }
+
+  @override
+  Future<void> showInfo(String title, String message) {
+    return Future.value(null);
+  }
+
+  @override
+  void showSetup(String game, SettingsProvider settingsProvider) {}
+
+  @override
+  Future<bool> showConfirmation(String title, String message, {String confirmText = "Yes", String cancelText = "No"}) {
+    return Future.value(false);
+  }
+
+  @override
+  Future<void> showError(String title, String message) {
+    return Future.value(null);
+  }
+}

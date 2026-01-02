@@ -17,23 +17,30 @@ class LauncherService {
 
   LauncherService(this.modService, this.codeProvider, this.settingsProvider, this.dialogService);
 
-  Future<void> launchGame(List<Mod> selectedMods, String selectedGame) async {
+  Future<void> launchGame(
+    List<Mod> selectedMods,
+    String selectedGame, {
+    bool injectCodes = true,
+    bool headless = false,
+  }) async {
     var settings = await settingsProvider.loadSettings();
     if (settings == null) {
       await dialogService.showError("Error", "Settings could not be loaded.");
       return;
     }
 
-    final conflicts = await modService.findConflicts(selectedMods);
-    if (conflicts.isNotEmpty) {
-      final shouldLaunch = await dialogService.showConfirmation(
-        "Conflicts Detected",
-        "The following conflicts were found:\n\n${conflicts.join("\n")}",
-        confirmText: "Launch Anyway",
-        cancelText: "Cancel",
-      );
+    if (!headless) {
+      final conflicts = await modService.findConflicts(selectedMods);
+      if (conflicts.isNotEmpty) {
+        final shouldLaunch = await dialogService.showConfirmation(
+          "Conflicts Detected",
+          "The following conflicts were found:\n\n${conflicts.join("\n")}",
+          confirmText: "Launch Anyway",
+          cancelText: "Cancel",
+        );
 
-      if (!shouldLaunch) return;
+        if (!shouldLaunch) return;
+      }
     }
 
     await modService.prepareGameDirectory(settings.tyDirectoryPath);
@@ -67,7 +74,7 @@ class LauncherService {
 
     MemoryEditor.init(result.pid);
     await MemoryEditor.waitForProcessToStart(result.pid);
-    await codeProvider.applyActiveCodes();
+    if (injectCodes) await codeProvider.applyActiveCodes();
     result.exitCode.then((exitCode) {
       MemoryEditor.deinit();
       print('Process exited with code: $exitCode');

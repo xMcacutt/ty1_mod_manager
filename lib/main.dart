@@ -9,6 +9,7 @@ import 'package:ty_mod_manager/providers/mod_provider.dart';
 import 'package:ty_mod_manager/providers/settings_provider.dart';
 import 'package:ty_mod_manager/services/code_service.dart';
 import 'package:ty_mod_manager/services/dialog_service.dart';
+import 'package:ty_mod_manager/services/direct_launcher.dart';
 import 'package:ty_mod_manager/services/launcher_service.dart';
 import 'package:ty_mod_manager/services/mod_service.dart';
 import 'package:ty_mod_manager/services/settings_service.dart';
@@ -17,17 +18,79 @@ import 'package:ty_mod_manager/services/version_service.dart';
 import 'package:ty_mod_manager/views/main_view.dart';
 import 'package:path/path.dart' as path;
 import 'services/app_data_migration.dart';
+import 'launch_args.dart';
 import 'theme.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final dialogService = DialogService(navigatorKey);
 
-Future<void> main() async {
+Future<void> log(String message) async {
+  final file = File('${Directory.systemTemp.path}/ty_mod_manager.log');
+  file.writeAsStringSync('[${DateTime.now().toIso8601String()}] $message\n', mode: FileMode.append);
+}
+
+Future<void> main(List<String> args) async {
+  log('RAW ARGS: $args');
+
+  late final LaunchOptions options;
+
+  try {
+    options = parseArgs(args);
+  } catch (e) {
+    log(e.toString());
+    exit(0);
+  }
+
+  if (options.direct) {
+    await runDirectLaunch(options);
+    exit(0);
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
   await AppDataMigration.migrate();
   await _removeLegacyExeIfPresent();
+
   initAppVersion();
+
   runApp(const ModManagerApp());
+}
+
+Future<void> runDirectLaunch(LaunchOptions options) async {
+  log("Running direct launch");
+
+  final settingsService = SettingsService();
+  final modService = ModService();
+  final codeService = CodeService();
+
+  final codeProvider = CodeProvider()..initialize(codeService);
+  final gameProvider = GameProvider(null);
+  final settingsProvider = SettingsProvider();
+  final modProvider = ModProvider();
+
+  final updateManager = UpdateManagerService(settingsService, gameProvider);
+
+  gameProvider.setCodeProvider(codeProvider, settingsProvider, modProvider);
+
+  settingsProvider.initialize(settingsService, updateManager, gameProvider);
+
+  modProvider.initialize(modService, settingsService, gameProvider);
+
+  final gameName = switch (options.game!) {
+    Game.ty1 => 'Ty 1',
+    Game.ty2 => 'Ty 2',
+    Game.ty3 => 'Ty 3',
+  };
+
+  final launcher = LauncherService(modService, codeProvider, settingsProvider, NullDialogService());
+
+  log("Preparing game: $gameName");
+  await prepareGame(game: gameName, codeProvider: codeProvider, modService: modService);
+
+  log("Resolving mods...");
+  final mods = await resolveMods(modService: modService, game: gameName, overrideMods: options.modsOverride);
+
+  log("Launching...");
+  await launcher.launchGame(mods, gameName, injectCodes: options.injectCodes, headless: true);
 }
 
 class ModManagerApp extends StatelessWidget {
