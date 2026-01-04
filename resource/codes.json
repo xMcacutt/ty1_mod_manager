@@ -60,7 +60,7 @@
     }, 
     {
         "name": "Open Game Info",
-        "description": "After entering the any level, all game info will be open.",
+        "description": "After entering any level, all game info will be open.",
         "codes": 
         [
             {
