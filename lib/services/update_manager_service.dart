@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:http/http.dart' as http;
+import 'package:rhttp/rhttp.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ty_mod_manager/main.dart';
 import 'package:ty_mod_manager/providers/game_provider.dart';
@@ -36,9 +36,9 @@ class UpdateManagerService {
           "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/latest.json?$timestamp",
         ];
 
-        http.Response? response;
+        HttpTextResponse? response;
         for (final url in metadataUrls) {
-          final res = await http.get(Uri.parse(url));
+          final res = await Rhttp.get(url);
           if (res.statusCode == 200) {
             response = res;
             metadataSource = url;
@@ -46,14 +46,14 @@ class UpdateManagerService {
           }
         }
         if (response == null || metadataSource == null) {
-          print("Could not access update metadata.");
+          log("Could not access update metadata.");
           return null;
         }
 
         latestData = json.decode(response.body) as Map<String, dynamic>?;
       }
       if (latestData == null) {
-        print("Update metadata is empty or invalid.");
+        log("Update metadata is empty or invalid.");
         return null;
       }
 
@@ -63,18 +63,18 @@ class UpdateManagerService {
 
       final currentVersion = getAppVersion();
       if (currentVersion == latestVersion) {
-        print("Already up-to-date (v$currentVersion).");
+        log("Already up-to-date (v$currentVersion).");
         if (showUpToDate) await dialogService.showInfo("Already up-to-date", "Nothing new to update.");
         return null;
       }
 
-      print("New version available: $latestVersion (metadata: ${metadataSource ?? 'unknown'}). Downloading...");
+      log("New version available: $latestVersion (metadata: ${metadataSource ?? 'unknown'}). Downloading...");
       final settings = await settingsService.loadSettings(gameProvider.selectedGame);
       if (settings == null) return null;
       if (updateFramework && await downloadAndUpdateTygerFramework(settings.tyDirectoryPath) == false) return null;
       return await downloadAndPrepareUpdate(downloadUrl, latestVersion, exeName: exeNameOverride);
     } catch (e) {
-      print("Update check failed: $e");
+      log("Update check failed: $e");
       return null;
     }
   }
@@ -83,17 +83,17 @@ class UpdateManagerService {
     try {
       final dll = File('$tyDirectoryPath/XInput9_1_0.dll');
       if (await dll.exists()) await dll.delete();
-      final response = await http.get(
-        Uri.parse("https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll"),
+      final response = await Rhttp.getBytes(
+        "https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll",
       );
       if (response.statusCode != 200) {
-        print("Download failed.");
+        log("Download failed.");
         return false;
       }
-      await File(dll.path).writeAsBytes(response.bodyBytes);
+      await File(dll.path).writeAsBytes(response.body);
       return true;
     } catch (e) {
-      print("Download failed: $e");
+      log("Download failed: $e");
       return false;
     }
   }
@@ -107,13 +107,13 @@ class UpdateManagerService {
 
     Directory(updateFolder).createSync(recursive: true);
 
-    final response = await http.get(Uri.parse(url));
+    final response = await Rhttp.getBytes(url);
     if (response.statusCode != 200) {
-      print("Download failed.");
+      log("Download failed.");
       return null;
     }
-    File(zipFilePath).writeAsBytesSync(response.bodyBytes);
-    print("Download complete.");
+    File(zipFilePath).writeAsBytesSync(response.body);
+    log("Download complete.");
 
     final bytes = File(zipFilePath).readAsBytesSync();
     final archive = ZipDecoder().decodeBytes(bytes);
@@ -127,7 +127,7 @@ class UpdateManagerService {
         Directory(filePath).createSync(recursive: true);
       }
     }
-    print("Update extracted.");
+    log("Update extracted.");
 
     final targetExeName =
         (exeName != null && exeName.isNotEmpty)
@@ -164,8 +164,8 @@ class UpdateManagerService {
     ''';
 
     File(batchFilePath).writeAsStringSync(batchContent);
-    print("Update script created.");
-    print(batchFilePath);
+    log("Update script created.");
+    log(batchFilePath);
     return batchFilePath;
   }
 

@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ty_mod_manager/main.dart';
 import '../models/mod.dart';
-import 'package:http/http.dart' as http;
+import 'package:rhttp/rhttp.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
@@ -32,16 +33,16 @@ class ModService {
         return iconFile;
       }
       if (mod.iconUrl != null && mod.iconUrl!.isNotEmpty) {
-        final response = await http.get(Uri.parse(mod.iconUrl!));
+        final response = await Rhttp.getBytes(mod.iconUrl!);
         if (response.statusCode == 200) {
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/${mod.name}_icon.ico');
-          await tempFile.writeAsBytes(response.bodyBytes);
+          await tempFile.writeAsBytes(response.body);
           return tempFile;
         }
       }
     } catch (e) {
-      print("Error fetching icon: $e");
+      log("Error fetching icon: $e");
     }
     return null;
   }
@@ -90,14 +91,14 @@ class ModService {
       if (await depVerDir.exists()) continue;
       if (!await depDir.exists()) await depDir.create();
       await depVerDir.create();
-      final response = await http.get(Uri.parse(dep.url));
+      final response = await Rhttp.getBytes(dep.url);
       if (response.statusCode != 200) {
-        print('Could not access file at url ${dep.url}');
+        log('Could not access file at url ${dep.url}');
         if ((await depDir.list().toList()).isEmpty) await depDir.delete();
         continue;
       }
       final depFilePath = '${depVerDir.path}/${dep.name}.dll';
-      await File(depFilePath).writeAsBytes(response.bodyBytes);
+      await File(depFilePath).writeAsBytes(response.body);
     }
     return true;
   }
@@ -107,16 +108,16 @@ class ModService {
     final modDir = Directory('${modsDir.path}/${mod.name}');
     if (!await createModDir(mod, modDir)) return false;
 
-    final response = await http.get(Uri.parse(mod.downloadUrl));
+    final response = await Rhttp.getBytes(mod.downloadUrl);
     if (response.statusCode != 200) {
-      print('Could not access file at url ${mod.downloadUrl}');
+      log('Could not access file at url ${mod.downloadUrl}');
       if ((await modDir.list().toList()).isEmpty) await modDir.delete();
       return false;
     }
 
     final tempDir = await getTemporaryDirectory();
     final zipFilePath = '${tempDir.path}/${mod.name}.zip';
-    await File(zipFilePath).writeAsBytes(response.bodyBytes);
+    await File(zipFilePath).writeAsBytes(response.body);
     final bytes = await File(zipFilePath).readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
 
@@ -301,7 +302,7 @@ class ModService {
   Future<List<Mod>> fetchRemoteMods(String game) async {
     final modDirectoryJsonUrl =
         "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/mod_directory.json?${DateTime.now().millisecondsSinceEpoch}";
-    final response = await http.get(Uri.parse(modDirectoryJsonUrl));
+    final response = await Rhttp.get(modDirectoryJsonUrl);
 
     if (response.statusCode != 200) {
       return [];
@@ -313,7 +314,7 @@ class ModService {
     for (var modListing in modData) {
       final modInfoUrl = "${modListing['mod_info_url']}?${DateTime.now().millisecondsSinceEpoch}";
       try {
-        final modResponse = await http.get(Uri.parse(modInfoUrl));
+        final modResponse = await Rhttp.get(modInfoUrl);
 
         if (modResponse.statusCode != 200) {
           continue;

@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rhttp/rhttp.dart';
 import 'package:ty_mod_manager/providers/code_provider.dart';
 import 'package:ty_mod_manager/providers/game_provider.dart';
 import 'package:ty_mod_manager/providers/mod_directory_provider.dart';
@@ -24,13 +26,16 @@ import 'theme.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final dialogService = DialogService(navigatorKey);
 
-Future<void> log(String message) async {
+void log(String message) {
   final file = File('${Directory.systemTemp.path}/ty_mod_manager.log');
+  print(message);
   file.writeAsStringSync('[${DateTime.now().toIso8601String()}] $message\n', mode: FileMode.append);
 }
 
 Future<void> main(List<String> args) async {
-  log('RAW ARGS: $args');
+  final file = File('${Directory.systemTemp.path}/ty_mod_manager.log');
+  if (await file.exists()) await file.delete();
+  Rhttp.init();
 
   late final LaunchOptions options;
 
@@ -45,6 +50,16 @@ Future<void> main(List<String> args) async {
     await runDirectLaunch(options);
     exit(0);
   }
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    log("${details.exception}\n${details.stack}");
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    log("$error\n$stack");
+    return true;
+  };
 
   WidgetsFlutterBinding.ensureInitialized();
   await AppDataMigration.migrate();
@@ -174,9 +189,9 @@ Future<void> _removeLegacyExeIfPresent() async {
     final newExe = File(path.join(appDir, 'ty_mod_manager.exe'));
     if (await newExe.exists() && await oldExe.exists()) {
       await oldExe.delete();
-      print("Removed legacy executable ty1_mod_manager.exe");
+      log("Removed legacy executable ty1_mod_manager.exe");
     }
   } catch (e) {
-    print("Failed to remove legacy executable: $e");
+    log("Failed to remove legacy executable: $e");
   }
 }

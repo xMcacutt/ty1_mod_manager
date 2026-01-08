@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:ty_mod_manager/main.dart';
 import 'package:ty_mod_manager/providers/code_provider.dart';
 import 'package:ty_mod_manager/providers/game_provider.dart';
 import 'package:ty_mod_manager/providers/settings_provider.dart';
@@ -77,7 +77,7 @@ class LauncherService {
     if (injectCodes) await codeProvider.applyActiveCodes();
     result.exitCode.then((exitCode) {
       MemoryEditor.deinit();
-      print('Process exited with code: $exitCode');
+      log('Process exited with code: $exitCode');
     });
   }
 }

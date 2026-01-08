@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:rhttp/rhttp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ty_mod_manager/main.dart';
 import 'package:ty_mod_manager/providers/game_provider.dart';
 import 'package:ty_mod_manager/services/utils.dart';
 import '../models/settings.dart';
@@ -19,7 +20,7 @@ class SettingsService {
     if (jsonString != null) {
       return Settings.fromJson(jsonString);
     }
-    print("No settings found");
+    log("No settings found");
     return null;
   }
 
@@ -44,14 +45,14 @@ class SettingsService {
     }
     final dll = File('${baseDirectory.path}/XInput9_1_0.dll');
     if (!await dll.exists()) {
-      final response = await http.get(
-        Uri.parse("https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll"),
+      final response = await Rhttp.getBytes(
+        "https://github.com/ElusiveFluffy/TygerFramework/releases/latest/download/XInput9_1_0.dll",
       );
       if (response.statusCode != 200) {
-        print("Download failed.");
+        log("Download failed.");
         return false;
       }
-      File(dll.path).writeAsBytesSync(response.bodyBytes);
+      File(dll.path).writeAsBytesSync(response.body);
     }
     return true;
   }

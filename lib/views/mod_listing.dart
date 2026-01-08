@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ty_mod_manager/main.dart';
 import 'package:ty_mod_manager/providers/mod_directory_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
@@ -43,7 +44,7 @@ class _ModListing extends State<ModListing> {
               return SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
             }
             if (snapshot.hasError) {
-              print("Error loading icon: ${snapshot.error}");
+              log("Error loading icon: ${snapshot.error}");
               return Image.asset('resource/unknown.ico', width: 40, height: 40);
             }
             if (snapshot.data == null) {

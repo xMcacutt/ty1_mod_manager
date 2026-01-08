@@ -3,12 +3,13 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
+import 'package:rhttp/rhttp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ty_mod_manager/services/ffi_win32.dart';
 import 'package:ty_mod_manager/services/utils.dart';
 import 'package:win32/win32.dart';
 import '../models/code.dart';
+import '../main.dart';
 
 class CodeService {
   Future<List<Code>> loadCodeData(String game) async {
@@ -18,14 +19,12 @@ class CodeService {
 
     final fileName = codeFiles[game] ?? 'codes.json';
 
-    final response = await http.get(
-      Uri.parse(
-        "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/resource/$fileName?${DateTime.now().millisecondsSinceEpoch}",
-      ),
+    final response = await Rhttp.get(
+      "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/resource/$fileName?${DateTime.now().millisecondsSinceEpoch}",
     );
     if (response.statusCode != 200) {
       codeJson = await rootBundle.loadString('resource/$fileName');
-      print("Download failed.");
+      log("Download failed.");
     } else {
       codeJson = response.body;
     }
@@ -66,7 +65,7 @@ class CodeService {
   Future<void> applyActiveCodes(List<Code> codes) async {
     final activeCodes = codes.where((code) => code.isActive).toList();
     for (var code in activeCodes) {
-      print("Applying code");
+      log("Applying code");
       applyCode(code);
     }
   }
@@ -78,14 +77,14 @@ class CodeService {
   }
 
   void applyCodeChange(CodeData code, int? value) {
-    print('Applying code at address: ${code.address} with bytes: ${code.bytes}');
+    log('Applying code at address: ${code.address} with bytes: ${code.bytes}');
 
     List<int> byteList;
 
     if (code.bytes.startsWith("X")) {
       int byteSize = int.parse(code.bytes.substring(1)); // Extract number from "X4"
       if (value == null) {
-        print('Error: No value provided for value-based code.');
+        log('Error: No value provided for value-based code.');
         return;
       }
       byteList = intToByteList(value, byteSize);
@@ -111,9 +110,9 @@ class CodeService {
     );
 
     if (writeSuccess == 0) {
-      print('Failed to apply code.');
+      log('Failed to apply code.');
     } else {
-      print('Successfully applied code!');
+      log('Successfully applied code!');
     }
 
     calloc.free(bytesWritten);

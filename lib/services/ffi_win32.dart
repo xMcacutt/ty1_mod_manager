@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
+import 'package:ty_mod_manager/main.dart';
 
 typedef VirtualProtectExC =
     Int32 Function(
@@ -40,7 +41,7 @@ class MemoryEditor {
               return;
             }
           } catch (ex) {
-            print(ex);
+            log(ex.toString());
           }
           await Future.delayed(Duration(milliseconds: 100));
         }

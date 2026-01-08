@@ -1,17 +1,14 @@
-import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:ty_mod_manager/main.dart';
+import 'package:rhttp/rhttp.dart';
 
-Future<bool> download(BuildContext context, String fileUrl, String savePath) async {
+Future<bool> download(String fileUrl, String savePath) async {
   try {
-    // Send a GET request to fetch the file
-    final response = await http.get(Uri.parse(fileUrl));
+    final response = await Rhttp.getBytes(fileUrl);
 
     if (response.statusCode == 200) {
-      // If the request is successful, write the file to disk
       File file = File(savePath);
-      await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(response.body);
       return true;
     } else {
       dialogService.showError('Error', 'Failed to download file. Status code: ${response.statusCode}');
