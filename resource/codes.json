@@ -162,5 +162,36 @@
                 "bytes": "00"
             }
         ]
+    },
+    {
+        "name": "Sly Shadow Fix",
+        "description": "Prevents shadow level being set when entering or leaving the Sly fight.",
+        "codes":
+        [
+            {
+                "address": "C81D1",
+                "bytes": "90 90 90 90 90"
+            },
+            {
+                "address": "C81DF",
+                "bytes": "90 90 90 90 90 90 90 90"
+            },
+            {
+                "address": "C81F1",
+                "bytes": "90 90 90 90 90"
+            },
+            {
+                "address": "C8221",
+                "bytes": "90 90 90 90 90"
+            },
+            {
+                "address": "C822F",
+                "bytes": "90 90 90 90 90 90 90 90"
+            },
+            {
+                "address": "C8241",
+                "bytes": "90 90 90 90 90"
+            }
+        ]
     }
 ]
