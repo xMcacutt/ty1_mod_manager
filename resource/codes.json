@@ -89,17 +89,6 @@
         ]
     }, 
     {
-        "name": "Disable Sly Shadows",
-        "description": "Sets shadows to off on leaving Sly fight.",
-        "codes": 
-        [
-            {
-                "address": "C8236",
-                "bytes": "00"
-            }
-        ]
-    }, 
-    {
         "name": "Disable Camera Overrides",
         "description": "Prevent the camera from being overridden in certain areas.",
         "codes": 
