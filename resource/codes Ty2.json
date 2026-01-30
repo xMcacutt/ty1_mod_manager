@@ -9,6 +9,25 @@
                 "bytes": "90 90"
             }
         ]
+    },    
+    {
+        "name": "No-Infra Collectible Maps",
+        "description": "Allow collectibles to appear on the map when you have the map item without requiring the Infrarang or X-Rang to be held.",
+        "codes": 
+        [
+            {
+                "address": "264A14",
+                "bytes": "90 90 90 90 90 90"
+            },
+            {
+                "address": "265703",
+                "bytes": "90 90 90 90 90 90"
+            },
+            {
+                "address": "2647F4",
+                "bytes": "90 90 90 90 90 90"
+            }
+        ]
     },
     {
         "name": "Whacky Resolutions",
