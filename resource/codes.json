@@ -182,5 +182,16 @@
                 "bytes": "90 90 90 90 90"
             }
         ]
+    },
+    {
+        "name": "Prevent Autosave Blocking",
+        "description": "Allows menuing even when the autosave icon is still on screen.",
+        "codes": 
+        [
+            {
+                "address": "10B78C",
+                "bytes": "90 90"
+            }
+        ]
     }
 ]
