@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:ty_mod_manager/main.dart';
+
 Future<void> recursiveCopyDirectory(Directory source, Directory destination) async {
   // Check if the source directory exists
   if (!await source.exists()) {
-    print('Source directory does not exist');
+    log('Source directory does not exist');
     return;
   }
 

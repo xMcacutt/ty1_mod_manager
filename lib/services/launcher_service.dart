@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ty_mod_manager/main.dart';
 import 'package:ty_mod_manager/providers/code_provider.dart';
 import 'package:ty_mod_manager/providers/game_provider.dart';
@@ -16,6 +18,28 @@ class LauncherService {
   final DialogService dialogService;
 
   LauncherService(this.modService, this.codeProvider, this.settingsProvider, this.dialogService);
+
+  Future<void> ensureLargeAddressAware(String exePath) async {
+    final file = File(exePath);
+    if (!await file.exists()) return;
+    final bytes = await file.readAsBytes();
+    final data = Uint8List.fromList(bytes);
+    if (data.length < 0x40) return;
+    final peHeaderOffset = data[0x3C] | (data[0x3D] << 8) | (data[0x3E] << 16) | (data[0x3F] << 24);
+    if (data[peHeaderOffset] != 0x50 || data[peHeaderOffset + 1] != 0x45) {
+      throw Exception("File is not a valid PE executable.");
+    }
+    final charOffset = peHeaderOffset + 4 + 18;
+    if (data.length < charOffset + 2) return;
+    int currentCharacteristics = data[charOffset] | (data[charOffset + 1] << 8);
+    const int imageFileLargeAddressAware = 0x0020;
+    if ((currentCharacteristics & imageFileLargeAddressAware) == 0) {
+      currentCharacteristics |= imageFileLargeAddressAware;
+      data[charOffset] = currentCharacteristics & 0xFF;
+      data[charOffset + 1] = (currentCharacteristics >> 8) & 0xFF;
+      await file.writeAsBytes(data);
+    }
+  }
 
   Future<void> launchGame(
     List<Mod> selectedMods,
@@ -44,6 +68,13 @@ class LauncherService {
     }
 
     await modService.prepareGameDirectory(settings.tyDirectoryPath);
+    final exeName = GameProvider.getExecutableName(selectedGame);
+    final fullExePath = '${settings.tyDirectoryPath}/$exeName';
+    try {
+      await ensureLargeAddressAware(fullExePath);
+    } catch (e) {
+      log("Failed to apply LAA patch: $e");
+    }
 
     final depVersions = <String, String>{};
     for (final mod in selectedMods) {
@@ -66,11 +97,7 @@ class LauncherService {
 
     final argsString = settings.launchArgs;
     final launchArgs = argsString.split(' ');
-    final result = await Process.start(
-      '${settings.tyDirectoryPath}/${GameProvider.getExecutableName(selectedGame)}',
-      launchArgs,
-      workingDirectory: settings.tyDirectoryPath,
-    );
+    final result = await Process.start(fullExePath, launchArgs, workingDirectory: settings.tyDirectoryPath);
 
     MemoryEditor.init(result.pid);
     await MemoryEditor.waitForProcessToStart(result.pid);
