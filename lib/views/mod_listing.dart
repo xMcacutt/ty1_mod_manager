@@ -92,8 +92,9 @@ class _ModListing extends State<ModListing> {
       context: context,
       position: RelativeRect.fromRect(position & const Size(40, 40), Offset.zero & overlay.size),
       items: [
-        PopupMenuItem(enabled: !widget.mod.website.isEmpty, child: Text("Mod Website"), value: 'website'),
-        PopupMenuItem(child: Text("Uninstall"), value: 'uninstall'),
+        PopupMenuItem(enabled: widget.mod.website.isNotEmpty, value: 'website', child: Text("Mod Website")),
+        PopupMenuItem(value: 'open', child: Text("Open Folder")),
+        PopupMenuItem(value: 'uninstall', child: Text("Uninstall")),
       ],
     ).then((value) {
       if (value != null) {
@@ -116,6 +117,11 @@ class _ModListing extends State<ModListing> {
         final dirProvider = context.read<ModDirectoryProvider>();
         await modProvider.uninstallMod(widget.mod, dirProvider: dirProvider);
         break;
+      case 'open':
+        final modProvider = context.read<ModProvider>();
+        final dir = await modProvider.getModDirectory(widget.mod);
+        log(dir.path);
+        Process.run('explorer.exe', [dir.path]);
     }
   }
 }

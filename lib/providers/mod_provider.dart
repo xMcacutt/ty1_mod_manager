@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,6 +76,10 @@ class ModProvider with ChangeNotifier {
       }
     }
     return success;
+  }
+
+  Future<Directory> getModDirectory(Mod mod) async {
+    return await _modService.getModDirectory(mod);
   }
 
   Future<void> uninstallMod(Mod mod, {ModDirectoryProvider? dirProvider}) async {

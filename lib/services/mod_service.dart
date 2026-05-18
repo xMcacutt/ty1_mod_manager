@@ -47,8 +47,12 @@ class ModService {
     return null;
   }
 
+  Future<Directory> getModDirectory(Mod mod) async {
+    return Directory('${(await getModsDirectory()).path}\\${mod.name}');
+  }
+
   Future<bool> uninstallMod(Mod mod) async {
-    final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
+    final modDir = await getModDirectory(mod);
     if (await modDir.exists()) {
       await modDir.delete(recursive: true);
       return true;
@@ -86,8 +90,8 @@ class ModService {
   Future<bool> installDeps(Mod mod) async {
     final depsDir = await getDepsDirectory();
     for (final dep in mod.dependencies) {
-      final depDir = Directory('${depsDir.path}/${dep.name}');
-      final depVerDir = Directory('${depsDir.path}/${dep.name}/${dep.version}');
+      final depDir = Directory('${depsDir.path}\\${dep.name}');
+      final depVerDir = Directory('${depsDir.path}\\${dep.name}\\${dep.version}');
       if (await depVerDir.exists()) continue;
       if (!await depDir.exists()) await depDir.create();
       await depVerDir.create();
@@ -97,7 +101,7 @@ class ModService {
         if ((await depDir.list().toList()).isEmpty) await depDir.delete();
         continue;
       }
-      final depFilePath = '${depVerDir.path}/${dep.name}.dll';
+      final depFilePath = '${depVerDir.path}\\${dep.name}.dll';
       await File(depFilePath).writeAsBytes(response.body);
     }
     return true;
@@ -105,7 +109,7 @@ class ModService {
 
   Future<bool> install(Mod mod) async {
     final modsDir = await getModsDirectory();
-    final modDir = Directory('${modsDir.path}/${mod.name}');
+    final modDir = Directory('${modsDir.path}\\${mod.name}');
     if (!await createModDir(mod, modDir)) return false;
 
     final response = await Rhttp.getBytes(mod.downloadUrl);
@@ -116,13 +120,13 @@ class ModService {
     }
 
     final tempDir = await getTemporaryDirectory();
-    final zipFilePath = '${tempDir.path}/${mod.name}.zip';
+    final zipFilePath = '${tempDir.path}\\${mod.name}.zip';
     await File(zipFilePath).writeAsBytes(response.body);
     final bytes = await File(zipFilePath).readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
 
     for (final file in archive) {
-      final filePath = '${modDir.path}/${file.name}';
+      final filePath = '${modDir.path}\\${file.name}';
       if (file.isFile) {
         final fileObj = File(filePath);
         await fileObj.create(recursive: true);
@@ -132,21 +136,21 @@ class ModService {
       }
     }
 
-    final internalDepsDir = Directory('${modDir.path}/Dependencies');
+    final internalDepsDir = Directory('${modDir.path}\\Dependencies');
     if (!(await internalDepsDir.exists())) {
       await internalDepsDir.create();
     }
 
     await installDeps(mod);
 
-    final modInfoFile = File('${modDir.path}/mod_info.json');
+    final modInfoFile = File('${modDir.path}\\mod_info.json');
     await modInfoFile.writeAsString(jsonEncode(mod.toJson()));
 
     return true;
   }
 
   Future<Mod> fromDirectory(Directory modDir) async {
-    final modInfoFile = File('${modDir.path}/mod_info.json');
+    final modInfoFile = File('${modDir.path}\\mod_info.json');
     final modInfoJson = await modInfoFile.readAsString();
     final modInfo = jsonDecode(modInfoJson);
     return Mod.fromJson(modInfo);
@@ -154,7 +158,7 @@ class ModService {
 
   Future<Directory> getModsDirectory() async {
     final directory = await getApplicationSupportDirectory();
-    final modsDirectory = Directory('${directory.path}/mods');
+    final modsDirectory = Directory('${directory.path}\\mods');
     if (!modsDirectory.existsSync()) {
       await modsDirectory.create(recursive: true);
     }
@@ -163,11 +167,11 @@ class ModService {
 
   Future<void> copyDependency(String depName, String depVersion, String tyDirectoryPath) async {
     final appSupportDir = await getApplicationSupportDirectory();
-    final depDir = Directory('${appSupportDir.path}/deps/$depName/$depVersion');
+    final depDir = Directory('${appSupportDir.path}\\deps\\$depName\\$depVersion');
     if (await depDir.exists()) {
       for (var file in await depDir.list().toList()) {
         if (file is File) {
-          final destFilePath = '$tyDirectoryPath/Plugins/Dependencies/${path.basename(file.path)}';
+          final destFilePath = '$tyDirectoryPath\\Plugins\\Dependencies\\${path.basename(file.path)}';
           if (!await File(destFilePath).exists()) {
             await file.copy(destFilePath);
           }
@@ -177,13 +181,13 @@ class ModService {
   }
 
   Future<void> copyInternalDependencies(Mod mod, String tyDirectoryPath) async {
-    final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
-    final internalDepsDir = Directory('${modDir.path}/Dependencies');
+    final modDir = Directory('${(await getModsDirectory()).path}\\${mod.name}');
+    final internalDepsDir = Directory('${modDir.path}\\Dependencies');
 
     if (await internalDepsDir.exists()) {
       for (var file in await internalDepsDir.list().toList()) {
         if (file is File) {
-          final destFilePath = '$tyDirectoryPath/Plugins/Dependencies/${path.basename(file.path)}';
+          final destFilePath = '$tyDirectoryPath\\Plugins\\Dependencies\\${path.basename(file.path)}';
           if (!await File(destFilePath).exists()) {
             await file.copy(destFilePath);
           }
@@ -193,15 +197,15 @@ class ModService {
   }
 
   Future<void> copyModFiles(Mod mod, String tyDirectoryPath) async {
-    final modDir = Directory('${(await getModsDirectory()).path}/${mod.name}');
-    final dllFile = File('${modDir.path}/${mod.dllName}.dll');
-    final patchFile = File('${modDir.path}/Patch_PC.rkv');
+    final modDir = Directory('${(await getModsDirectory()).path}\\${mod.name}');
+    final dllFile = File('${modDir.path}\\${mod.dllName}.dll');
+    final patchFile = File('${modDir.path}\\Patch_PC.rkv');
 
     if (await dllFile.exists()) {
-      await dllFile.copy('$tyDirectoryPath/Plugins/${mod.dllName}.dll');
+      await dllFile.copy('$tyDirectoryPath\\Plugins\\${mod.dllName}.dll');
     }
     if (await patchFile.exists()) {
-      await patchFile.copy('$tyDirectoryPath/Patch_PC.rkv');
+      await patchFile.copy('$tyDirectoryPath\\Patch_PC.rkv');
     }
 
     await copyInternalDependencies(mod, tyDirectoryPath);
@@ -209,7 +213,7 @@ class ModService {
 
   Future<Directory> getDepsDirectory() async {
     final directory = await getApplicationSupportDirectory();
-    final depsDirectory = Directory('${directory.path}/deps');
+    final depsDirectory = Directory('${directory.path}\\deps');
     if (!depsDirectory.existsSync()) {
       await depsDirectory.create(recursive: true);
     }
@@ -239,22 +243,22 @@ class ModService {
     if (result.files.isEmpty) return false;
     var zip = File(result.files.single.path!);
     var tempDir = await getTemporaryDirectory();
-    final zipFilePath = "${tempDir.path}/${result.files.single.name}";
+    final zipFilePath = "${tempDir.path}\\${result.files.single.name}";
     await zip.copy(zipFilePath);
     final bytes = await File(zipFilePath).readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
     if (archive.files.length > 4) return false;
     if (archive.files.length < 3) return false;
     if (!archive.files.any((x) => x.name == "mod_info.json")) return false;
-    var tempCopyDir = await Directory('${tempDir.path}/tyMMmod').create();
+    var tempCopyDir = await Directory('${tempDir.path}\\tyMMmod').create();
     for (final file in archive.files) {
-      final filePath = "${tempCopyDir.path}/${file.name}";
+      final filePath = "${tempCopyDir.path}\\${file.name}";
       await File(filePath).create(recursive: true);
       await File(filePath).writeAsBytes(file.content as List<int>);
     }
     Mod mod = await fromDirectory(tempCopyDir);
     var modsDir = await getModsDirectory();
-    var modDir = Directory('${modsDir.path}/${mod.name}');
+    var modDir = Directory('${modsDir.path}\\${mod.name}');
     if (!await createModDir(mod, modDir)) {
       await tempCopyDir.delete(recursive: true);
       return false;
@@ -262,7 +266,7 @@ class ModService {
     for (var entry in tempCopyDir.listSync(recursive: true)) {
       if (entry is File) {
         final relativePath = entry.path.substring(tempCopyDir.path.length + 1);
-        final destFile = File('${modDir.path}/$relativePath');
+        final destFile = File('${modDir.path}\\$relativePath');
         await destFile.create(recursive: true);
         await entry.copy(destFile.path);
       }
@@ -302,8 +306,10 @@ class ModService {
   Future<List<Mod>> fetchRemoteMods(String game) async {
     final modDirectoryJsonUrl =
         "https://raw.githubusercontent.com/xMcacutt/ty_mod_manager/refs/heads/master/mod_directory.json?${DateTime.now().millisecondsSinceEpoch}";
-    final response = await Rhttp.get(modDirectoryJsonUrl);
-
+    final response = await Rhttp.get(
+      modDirectoryJsonUrl,
+      headers: HttpHeaders.rawMap({'Cache-Control': 'no-cache', 'Pragma': 'no-cache'}),
+    );
     if (response.statusCode != 200) {
       return [];
     }
@@ -314,7 +320,10 @@ class ModService {
     for (var modListing in modData) {
       final modInfoUrl = "${modListing['mod_info_url']}?${DateTime.now().millisecondsSinceEpoch}";
       try {
-        final modResponse = await Rhttp.get(modInfoUrl);
+        final modResponse = await Rhttp.get(
+          modInfoUrl,
+          headers: HttpHeaders.rawMap({'Cache-Control': 'no-cache', 'Pragma': 'no-cache'}),
+        );
 
         if (modResponse.statusCode != 200) {
           continue;
