@@ -38,5 +38,8 @@
   {
     "name": "What's The Password",
     "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1-WhatsThePassword/refs/heads/master/mod_info.json"
-  }
+  },
+  {
+    "name": "Music Rando",
+    "mod_info_url": "https://raw.githubusercontent.com/xMcacutt/Ty1-Music-Rando/refs/heads/master/mod_info.json"
 ]
